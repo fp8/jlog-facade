@@ -1,0 +1,21 @@
+image: farport/fp8-alpine-node:latest
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  script:
+    - mkdir -p .public/rel
+    - mkdir -p .public/docs/vers
+    - cp -r docvers/* .public/docs/
+    - mv .public public
+  when: always
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
+  tags:
+    - farport
+    - nodejs

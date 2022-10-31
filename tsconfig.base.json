@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "declaration": true,
+        "lib": ["es2017"],
+        "module": "CommonJS",
+        "noImplicitReturns": true,
+        "outDir": "lib",
+        "removeComments": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "es2017",
+        "typeRoots": ["./types", "./node_modules/@types"]
+    }
+}
