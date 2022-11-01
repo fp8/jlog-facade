@@ -12,7 +12,7 @@
  * 
  * ref: https://stackoverflow.com/a/59787784/2355087
  */
-export function isEmpty(input: Object | null | undefined): boolean {
+export function isEmpty(input: unknown | null | undefined): boolean {
     if (input === undefined || input === null) {
         return true;
     }

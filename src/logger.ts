@@ -11,7 +11,7 @@ export type TLoggableParams = AbstractLoggable | IJson;
 export type TLoggableEntries = Error | TLoggableParams;
 
 export class JLogger {
-    constructor(private name: string) {};
+    constructor(private name: string) {}
 
     /**
      * Function to convert severity string to a level number
@@ -134,27 +134,27 @@ export class JLogger {
         writer.write(entry);
     }
 
-    public debug(message: string | Error, ...rest: TLoggableEntries[]) {
+    public debug(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.DEBUG, message, ...rest);
     }
 
-    public info(message: string | Error, ...rest: TLoggableEntries[]) {
+    public info(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.INFO, message, ...rest);
     }
 
-    public warn(message: string | Error, ...rest: TLoggableEntries[]) {
+    public warn(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.WARNING, message, ...rest);
     }
 
-    public error(message: string | Error, ...rest: TLoggableEntries[]) {
+    public error(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.ERROR, message, ...rest);
     }
 
-    public panic(message: string | Error, ...rest: TLoggableEntries[]) {
+    public panic(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.PANIC, message, ...rest);
     }
 
-    public async waitProcessComplete(maxRetry: number = 20): Promise<void> {
+    public async waitProcessComplete(maxRetry=20): Promise<void> {
         const writer = LogWriter.getInstance();
         return writer.waitProcessComplete(maxRetry);
     }

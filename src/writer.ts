@@ -20,9 +20,9 @@ export class LogWriter {
     private static instance: LogWriter | undefined = undefined;
 
     private readonly destinations : TLogDestinations = {};
-    private processing: boolean = false;
+    private processing = false;
 
-    private constructor() {};
+    private constructor() {}
 
     public static getInstance(): LogWriter {
         if (LogWriter.instance === undefined) {
@@ -106,7 +106,7 @@ export class LogWriter {
      * Wait for processing, which retry is 50 milliseconds, default for retry is 20x
      * so wait for 1 second
      */
-    public async waitProcessComplete(maxRetry:number=20): Promise<void> {
+    public async waitProcessComplete(maxRetry=20): Promise<void> {
         let retry = 0;
         let looking = true;
         

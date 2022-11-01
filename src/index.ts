@@ -3,7 +3,7 @@ import { TLogDestination, LogWriter } from './writer';
 
 export class LoggerFactory {
     private static readonly writer = LogWriter.getInstance();
-    private constructor() {};
+    private constructor() {}
 
     /**
      * Create an instance of logger
@@ -40,7 +40,7 @@ export class LoggerFactory {
     public static clearLogDestination(): void {
         this.writer.clearDestinatios();
     }
-};
+}
 
 export {
     TJsonValue, IJson, IJLogEntry,
@@ -54,4 +54,4 @@ export * from './models';
 export {
     JLogger
 };
-import { TLoggableParams, TLoggableEntries } from './logger';
+export { TLoggableParams, TLoggableEntries } from './logger';
