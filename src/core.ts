@@ -30,7 +30,7 @@ export interface IJLogEntry {
     /** Logger level */
     level: string,
     /** output message */
-    message?: string,
+    message: string,
     /** error object */
     error?: Error,
     /** additional attributes to log */
@@ -39,15 +39,23 @@ export interface IJLogEntry {
     time: Date
 }
 
-export interface ILogDestination {
-    readonly isAsync: boolean;
+/**
+ * Loggable is a class that can be added to the log and can be converted into a IJson
+ */
+export abstract class AbstractLoggable {
+    abstract toIJson(): IJson
 }
 
-
+/**
+ * A log destination that will write to output synchronously
+ */
 export abstract class AbstractLogDestination {
     abstract write(entry: IJLogEntry): void;
 }
 
+/**
+ * A log destination that will write to output asynchronously
+ */
 export abstract class AbstractAsyncLogDestination {
     abstract write(entry: IJLogEntry): Promise<void>;
 }

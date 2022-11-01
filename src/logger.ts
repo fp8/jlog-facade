@@ -1,16 +1,16 @@
 import {
     DEBUG, INFO, WARNING, ERROR, PANIC,
-    IJLogEntry, IJson
+    IJLogEntry, IJson,
+    AbstractLoggable
 } from './core';
-import {AbstractILoggable} from './models';
-import {LogStream} from './writer';
 
-export type TLoggableParams = AbstractILoggable | IJson;
+import {LogWriter} from './writer';
+import {LoggableError} from './models';
+
+export type TLoggableParams = AbstractLoggable | IJson;
 export type TLoggableEntries = Error | TLoggableParams;
 
 export class JLogger {
-    private stream = new LogStream();
-
     constructor(private name: string) {};
 
     /**
@@ -19,15 +19,27 @@ export class JLogger {
      * @param input 
      * @returns 
      */
-    private extractError(input: TLoggableEntries[]): [Error | undefined, TLoggableParams[]] {
-        let error: Error | undefined = undefined;
+    private extractError(message: string | Error, input: TLoggableEntries[]): [Error | undefined, TLoggableParams[]] {
+        let errorIsSet = false;
         const result: TLoggableParams[] = [];
 
+        let error: Error | undefined = undefined;
+        
+        // If message is of type Error, use that as error returned
+        if (message instanceof Error) {
+            error = message;
+            errorIsSet = true;
+        }
+
+        // Parse input
         for (const entry of input) {
             if (entry instanceof Error) {
-                // Only use the first error from the list
-                if (error === undefined) {
+                if (errorIsSet) {
+                    // tranform error into IJSON
+                    result.push(new LoggableError(entry));
+                } else {
                     error = entry;
+                    errorIsSet = true;
                 }
             } else {
                 result.push(entry);
@@ -43,9 +55,9 @@ export class JLogger {
      * @param input 
      * @returns 
      */
-    private generateData(input: TLoggableParams[]): IJson {
+    private mergeParams(input: TLoggableParams[]): IJson {
         const entries = input.map(entry => {
-            if (entry instanceof AbstractILoggable) {
+            if (entry instanceof AbstractLoggable) {
                 return entry.toIJson();
             } else {
                 return entry;
@@ -56,71 +68,68 @@ export class JLogger {
     }
 
     /**
-     * The main logging method that actually write to the log
+     * The main logging method that actually write to the log.  The objective is to allow caller
+     * to pass only Error object as a log, as well as supporting the case where a log contains
+     * both the message and Error object.  The `message` attribute must never be undefined.
      *
      * @param level 
-     * @param message 
+     * @param message string or instance of Error
      * @param rest 
      */
-    protected log(level: string, message?: string, ...rest: TLoggableEntries[]): void {
-        const [error, params] = this.extractError(rest);
-        const data = this.generateData(params)
+    protected log(level: string, message: string | Error, ...rest: TLoggableEntries[]): void {
+        const writer = LogWriter.getInstance();
 
-        if (message === undefined) {
-            if ('message' in data) {
-                message = data.message?.toString();
-                delete data.message;
-            }
+        // skip any logging if no destination has been set
+        if (!writer.hasDestination) {
+            return;
+        }
+
+        // Extract data to log from params
+        const [error, params] = this.extractError(message, rest);
+        const data = this.mergeParams(params);
+
+        // Set the message and error to be set in the log entry
+        let messageToUse: string;
+        if (message instanceof Error) {
+            messageToUse = message.message;
+        } else {
+            messageToUse = message;
         }
 
         const entry: IJLogEntry = {
             name: this.name,
             level,
-            message,
+            message: messageToUse,
             error,
             data,
             time: new Date()
         };
-        this.stream.write(entry);
+
+        writer.write(entry);
     }
 
-    public debug(message: string, ...rest: TLoggableEntries[]) {
+    public debug(message: string | Error, ...rest: TLoggableEntries[]) {
         this.log(DEBUG, message, ...rest);
     }
 
-    public info(message: string, ...rest: TLoggableEntries[]) {
+    public info(message: string | Error, ...rest: TLoggableEntries[]) {
         this.log(INFO, message, ...rest);
     }
 
-    public warn(message: string, ...rest: TLoggableEntries[]) {
+    public warn(message: string | Error, ...rest: TLoggableEntries[]) {
         this.log(WARNING, message, ...rest);
     }
 
-    public error(message: string, ...rest: TLoggableEntries[]) {
+    public error(message: string | Error, ...rest: TLoggableEntries[]) {
         this.log(ERROR, message, ...rest);
     }
 
-    public panic(message: string, ...rest: TLoggableEntries[]) {
+    public panic(message: string | Error, ...rest: TLoggableEntries[]) {
         this.log(PANIC, message, ...rest);
     }
 
-    private async delay(milli: number): Promise<void> {
-        return new Promise((resolve, _) => {
-            setTimeout(resolve, milli);
-        });
-    }
-
-    public async waitCurrentWrite(maxRetry: number = 10): Promise<void> {
-        let retry = 0;
-        let looking = true;
-        
-        while (looking || retry < maxRetry) {
-            retry += 1;
-            if (this.stream.isProcessing) {
-                await this.delay(100);
-            } else {
-                looking = false;
-            }
-        }
+    public async waitProcessComplete(maxRetry: number = 20): Promise<void> {
+        const writer = LogWriter.getInstance();
+        return writer.waitProcessComplete(maxRetry);
     }
 }
