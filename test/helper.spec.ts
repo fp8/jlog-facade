@@ -4,7 +4,7 @@ import {
     isEmpty
 } from '@fp8proj/helper';
 
-describe('core', () => {
+describe('helper', () => {
     it('isEmpty', () => {
         expect(isEmpty(undefined)).to.be.true;
         expect(isEmpty(null)).to.be.true;
