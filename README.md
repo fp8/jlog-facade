@@ -1,83 +1,33 @@
-# FP8 Typescript Node Seed Project
+# jlog-facade
 
-## Adding to GITLAB
+This is a simple logger façade that focusing on creating a JSON output for typescript projects.
 
-This project has been prepared to be added to gitlab.  The follow step should be performed:
+When a `JLogger` is created, it doesn't output any log until a log destination is created.
 
+## Logger
+
+The creation of logger should be done via factory: 
+
+```ts
+const logger = LoggerFactory.create('my-logger');
 ```
-cd <proj-name>
-git init
-git lfs track "release/*.tgz"
-git add .
-git commit -m"Initial Commit"
+
+An instance of `IJson` or `AbstractLoggable` such as `KV` can be passed to add a key to the log:
+
+```ts
+logger.info('The processing has started', new KV('processId', 123456));
 ```
 
-Make sure to update the `package.json`'s `repository` section with url of the remote git project.
+## Log Destination
 
-#### GIT LFS
+There are 3 possible type of log destination:
 
-* Setup [GIT LFS](https://git-lfs.github.com/)
+1. A synchronous class that extends `AbstractLogDestination`
+1. An asynchronous class that extends `AbstractAsyncLogDestination`
+1. An instance of `Writable` stream
 
-## CI that includes Test
+If one must ensure that last async log has been written, the following promise can be used: 
 
-The default `.gitlab-ci.yml` is a simple version that create pages only for documentation.  Here is
-a version that will also run tests:
-
-```yaml
-image: farport/fp8-alpine-node:latest
-
-stages:
-  - test
-  - test_failed
-  - deploy
-
-test_job:
-  stage: test
-  script:
-    - mkdir -p .public
-    - yarn install
-    - yarn test
-    - wget --output-document .public/test-badge.svg https://img.shields.io/badge/test-passed-green.svg
-    - yarn gitversion
-  only:
-    - master
-  tags:
-    - farport
-    - nodejs
-  artifacts:
-    paths:
-      - .public
-
-test_job_failure:
-  stage: test_failed
-  script:
-    - wget --output-document .public/test-badge.svg https://img.shields.io/badge/test-failed-red.svg
-  when: on_failure
-  only:
-    - master
-  tags:
-    - farport
-    - nodejs
-  artifacts:
-    paths:
-      - .public
-
-pages:
-  stage: deploy
-  script:
-    - mkdir -p .public/rel
-    - cp -r docs/* .public/
-    - mkdir -p .public/docs/vers
-    - cp -r docvers/* .public/docs/vers/
-    - cp -r release/* .public/rel/
-    - mv .public public
-  when: always
-  artifacts:
-    paths:
-      - public
-  only:
-    - master
-  tags:
-    - farport
-    - nodejs
+```ts
+await logger.waitProcessComplete();
 ```
