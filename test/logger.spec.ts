@@ -3,7 +3,7 @@ import { expect } from './testlib';
 import { Writable } from 'stream';
 
 import {
-    IJLogEntry, JLogger, LoggerFactory,
+    IJLogEntry, LoggerFactory,
     AbstractLogDestination, AbstractAsyncLogDestination,
     KV
 } from '@fp8proj';
@@ -13,7 +13,7 @@ let logCollector: string[] = [];
 let entryCollector: IJLogEntry[] = [];
 
 function addToLogCollector(source: string, entry: IJLogEntry) {
-    let message = `${source}-${entry.level}`;
+    let message = `${source}-${entry.severity}`;
 
     if (entry.message !== undefined) {
         message = `${message}: ${entry.message}`
@@ -120,7 +120,8 @@ describe('logger', () => {
         expect(entryCollector.length).is.eql(1);
         const entry = entryCollector[0];
 
-        expect(entry.level).is.eql('error');
+        expect(entry.severity).is.eql('error');
+        expect(entry.level).is.eql(500);
         expect(entry.message).is.eql('CFYlQXcdGf');
         expect(entry.error).is.equal(error);
     });
@@ -133,7 +134,8 @@ describe('logger', () => {
         expect(entryCollector.length).is.eql(1);
         const entry = entryCollector[0];
 
-        expect(entry.level).is.eql('info');
+        expect(entry.severity).is.eql('info');
+        expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('v8aNlgLIfi');
         expect(entry.error).is.undefined;
         expect(entry.data['key-k6HraLIn8I']).is.eql('k6HraLIn8I');

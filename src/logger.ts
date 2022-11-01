@@ -1,5 +1,5 @@
 import {
-    DEBUG, INFO, WARNING, ERROR, PANIC,
+    LogSeverity, LogLevel,
     IJLogEntry, IJson,
     AbstractLoggable
 } from './core';
@@ -12,6 +12,29 @@ export type TLoggableEntries = Error | TLoggableParams;
 
 export class JLogger {
     constructor(private name: string) {};
+
+    /**
+     * Function to convert severity string to a level number
+     * @param severity 
+     * @returns 
+     */
+    private logSeverityToLevel(severity: string | LogSeverity): LogLevel {
+        switch (severity) {
+            case LogSeverity.DEBUG:
+                return LogLevel.DEBUG;
+            case LogSeverity.INFO:
+                return LogLevel.INFO;
+            case LogSeverity.WARNING:
+                return LogLevel.WARNING;
+            case LogSeverity.ERROR:
+                return LogLevel.ERROR;
+            case LogSeverity.PANIC:
+                return LogLevel.PANIC;
+            default:
+                return LogLevel.INFO;
+        }
+    }
+
 
     /**
      * Isolate the first error from the params and return a clean LoggableParams
@@ -76,13 +99,15 @@ export class JLogger {
      * @param message string or instance of Error
      * @param rest 
      */
-    protected log(level: string, message: string | Error, ...rest: TLoggableEntries[]): void {
+    protected log(severity: string | LogSeverity, message: string | Error, ...rest: TLoggableEntries[]): void {
         const writer = LogWriter.getInstance();
 
         // skip any logging if no destination has been set
         if (!writer.hasDestination) {
             return;
         }
+
+        const level = this.logSeverityToLevel(severity);
 
         // Extract data to log from params
         const [error, params] = this.extractError(message, rest);
@@ -98,6 +123,7 @@ export class JLogger {
 
         const entry: IJLogEntry = {
             name: this.name,
+            severity,
             level,
             message: messageToUse,
             error,
@@ -109,23 +135,23 @@ export class JLogger {
     }
 
     public debug(message: string | Error, ...rest: TLoggableEntries[]) {
-        this.log(DEBUG, message, ...rest);
+        this.log(LogSeverity.DEBUG, message, ...rest);
     }
 
     public info(message: string | Error, ...rest: TLoggableEntries[]) {
-        this.log(INFO, message, ...rest);
+        this.log(LogSeverity.INFO, message, ...rest);
     }
 
     public warn(message: string | Error, ...rest: TLoggableEntries[]) {
-        this.log(WARNING, message, ...rest);
+        this.log(LogSeverity.WARNING, message, ...rest);
     }
 
     public error(message: string | Error, ...rest: TLoggableEntries[]) {
-        this.log(ERROR, message, ...rest);
+        this.log(LogSeverity.ERROR, message, ...rest);
     }
 
     public panic(message: string | Error, ...rest: TLoggableEntries[]) {
-        this.log(PANIC, message, ...rest);
+        this.log(LogSeverity.PANIC, message, ...rest);
     }
 
     public async waitProcessComplete(maxRetry: number = 20): Promise<void> {

@@ -11,15 +11,27 @@ export interface IJson {
 }
 
 /**
- * Default log levels.  These value must be supported for all caller
+ * Default log severity.
  */
-export const DEBUG = 'debug';
-export const INFO = 'info';
-export const WARNING = 'warn';
-export const ERROR = 'error';
-export const PANIC = 'panic';
+export enum LogSeverity {
+    DEBUG = 'debug',
+    INFO = 'info',
+    WARNING = 'warn',
+    ERROR = 'error',
+    PANIC = 'panic'
+}
 
-export const DEFAULT_LOG_LEVELS = [PANIC, ERROR, WARNING, INFO, DEBUG];
+/**
+ * Default log numeric level.  Used the same number as
+ * [GCloud's LogSeverity](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#LogSeverity)
+ */
+export enum LogLevel {
+    DEBUG = 100,
+    INFO = 200,
+    WARNING = 400,
+    ERROR = 500,
+    PANIC = 800
+}
 
 /**
  * A log entry
@@ -28,7 +40,9 @@ export interface IJLogEntry {
     /** Logger name */
     name: string,
     /** Logger level */
-    level: string,
+    level: number,
+    /** Logger severity */
+    severity: string,
     /** output message */
     message: string,
     /** error object */

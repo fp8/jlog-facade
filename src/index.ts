@@ -44,7 +44,7 @@ export class LoggerFactory {
 
 export {
     TJsonValue, IJson, IJLogEntry,
-    DEBUG, INFO, WARNING, ERROR, PANIC,
+    LogSeverity, LogLevel,
     AbstractLogDestination, AbstractAsyncLogDestination
 } from './core';
 
