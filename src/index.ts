@@ -1,6 +1,27 @@
 import { JLogger } from './logger';
 import { TLogDestination, LogWriter } from './writer';
 
+/**
+ * ## Json Logger Façada
+ * 
+ * Create an instance of {@link JLogger}
+ * 
+ * #### Usage:
+ * 
+ * ```ts
+ * const logger = LoggerFactory.create('my-logger');
+ * logger.info('The processing has started', new KV('processId', 123456));
+ * ```
+ * 
+ * Severity Supported (see {@link LogSeverity}):
+ * 
+ * - debug
+ * - info
+ * - warn
+ * - error
+ * - panic
+ * 
+ */
 export class LoggerFactory {
     private static readonly writer = LogWriter.getInstance();
     private constructor() {}
@@ -26,7 +47,7 @@ export class LoggerFactory {
     }
 
     /**
-     * Remove a specif log destination
+     * Remove a specific log destination
      *
      * @param name 
      */
@@ -54,4 +75,4 @@ export * from './models';
 export {
     JLogger
 };
-export { TLoggableParams, TLoggableEntries } from './logger';
+export { TLoggableEntries } from './logger';

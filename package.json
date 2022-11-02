@@ -12,7 +12,7 @@
         "build": "yarn lint && yarn build:ts && yarn test-lib && yarn gendoc",
         "build:ts": "tsc --project src/tsconfig.json",
         "gendoc:copy": "OUTPUTDIR=docvers/$(yarn --silent info:version) && mkdir -p $OUTPUTDIR; rsync -av --delete build/docs/ $OUTPUTDIR",
-        "gendoc:create": "OUTPUTDIR=build/docs && mkdir -p $OUTPUTDIR && typedoc --theme minimal --readme none --mode file --excludePrivate --tsconfig src/tsconfig.json --out $OUTPUTDIR src/index.ts",
+        "gendoc:create": "OUTPUTDIR=build/docs && mkdir -p $OUTPUTDIR && typedoc --readme none --excludePrivate --tsconfig src/tsconfig.json --out $OUTPUTDIR src/index.ts",
         "gendoc": "yarn gendoc:create && yarn gendoc:copy",
         "lint:ts": "eslint src --ext .ts,.tsx",
         "lint": "yarn lint:ts",
