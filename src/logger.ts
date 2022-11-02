@@ -4,12 +4,25 @@ import {
     AbstractLoggable
 } from './core';
 
+import { isEmpty } from './helper';
 import {LogWriter} from './writer';
 import {LoggableError} from './models';
 
+
 export type TLoggableParams = AbstractLoggable | IJson;
+
+/**
+ * Additional object type that can be passed to be written to log.  Can be one of:
+ * 
+ * - Error object
+ * - Instance of AbstractLoggable
+ * - IJson
+ */
 export type TLoggableEntries = Error | TLoggableParams;
 
+/**
+ * Json Logger objact.  Do not use this class directly; always create an instance of JLogger using {@link LoggerFactory}
+ */
 export class JLogger {
     constructor(private name: string) {}
 
@@ -78,7 +91,7 @@ export class JLogger {
      * @param input 
      * @returns 
      */
-    private mergeParams(input: TLoggableParams[]): IJson {
+    private mergeParams(input: TLoggableParams[]): IJson | undefined {
         const entries = input.map(entry => {
             if (entry instanceof AbstractLoggable) {
                 return entry.toIJson();
@@ -87,7 +100,13 @@ export class JLogger {
             }
         });
 
-        return Object.assign({}, ...entries);
+        const result = Object.assign({}, ...entries);
+
+        if (isEmpty(result)) {
+            return undefined;
+        } else {
+            return result;
+        }
     }
 
     /**
@@ -134,27 +153,39 @@ export class JLogger {
         writer.write(entry);
     }
 
+    /** Write a {@link LogSeverity.DEBUG} severity log */
     public debug(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.DEBUG, message, ...rest);
     }
 
+    /** Write a {@link LogSeverity.INFO} severity log */
     public info(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.INFO, message, ...rest);
     }
 
+    /** Write a {@link LogSeverity.WARNING} severity log */
     public warn(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.WARNING, message, ...rest);
     }
 
+    /** Write a {@link LogSeverity.ERROR} severity log */
     public error(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.ERROR, message, ...rest);
     }
 
+    /** Write a {@link LogSeverity.PANIC} severity log */
     public panic(message: string | Error, ...rest: TLoggableEntries[]): void {
         this.log(LogSeverity.PANIC, message, ...rest);
     }
 
-    public async waitProcessComplete(maxRetry=20): Promise<void> {
+    /**
+     * If a async destination based on {@link AbstractAsyncLogDestination} exists, use
+     * this method to wait for last log call complete.
+     *
+     * @param maxRetry number of time to retry.  Default to retry for 20 times.
+     * @returns 
+     */
+    public async hasLogCompleted(maxRetry=20): Promise<void> {
         const writer = LogWriter.getInstance();
         return writer.waitProcessComplete(maxRetry);
     }

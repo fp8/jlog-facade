@@ -57,7 +57,7 @@ describe('logger', () => {
     const logger = LoggerFactory.create('test-logger');
 
     beforeEach(() => {
-        dest.clearDestinatios();
+        dest.clearDestinations();
         logCollector = [];
         entryCollector = [];
     });
@@ -76,14 +76,14 @@ describe('logger', () => {
     it('info async log', async () => {
         dest.addDestination(new TestAsyncDestination());
         logger.info('lH37czD9jC')
-        await logger.waitProcessComplete();
+        await logger.hasLogCompleted();
         expect(logCollector).to.eql(['ASYNC-info: lH37czD9jC']);
     });
 
     it('warn stream log', async () => {
         dest.addDestination(new TestLogStream());
         logger.warn('kuh3lp3WVj')
-        await logger.waitProcessComplete();
+        await logger.hasLogCompleted();
         expect(logCollector).to.eql(['STREAM-warn: kuh3lp3WVj']);
     });
 
@@ -94,7 +94,7 @@ describe('logger', () => {
         LoggerFactory.addLogDestination(new TestLogStream(), 'stream');
         logger.error('uxqEbnCXeZ');
 
-        await logger.waitProcessComplete();
+        await logger.hasLogCompleted();
         expect(logCollector).to.eql([
             'SYNC-error: uxqEbnCXeZ', 'STREAM-error: uxqEbnCXeZ', 'ASYNC-error: uxqEbnCXeZ'
         ]);
@@ -104,7 +104,7 @@ describe('logger', () => {
 
         LoggerFactory.removeLogDestination('stream');
         logger.panic('6gaabROqBx');
-        await logger.waitProcessComplete();
+        await logger.hasLogCompleted();
         expect(logCollector).to.eql([
             'SYNC-panic: 6gaabROqBx', 'ASYNC-panic: 6gaabROqBx'
         ]);
@@ -128,7 +128,7 @@ describe('logger', () => {
 
     it('Test KV', () => {
         dest.addDestination(new TestDestination());
-        const kv = new KV('key-k6HraLIn8I', 'k6HraLIn8I'); 
+        const kv = new KV('key_k6HraLIn8I', 'k6HraLIn8I'); 
         logger.info('v8aNlgLIfi', kv);
 
         expect(entryCollector.length).is.eql(1);
@@ -138,7 +138,7 @@ describe('logger', () => {
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('v8aNlgLIfi');
         expect(entry.error).is.undefined;
-        expect(entry.data['key-k6HraLIn8I']).is.eql('k6HraLIn8I');
+        expect(entry.data?.key_k6HraLIn8I).is.eql('k6HraLIn8I');
     });
 
 });

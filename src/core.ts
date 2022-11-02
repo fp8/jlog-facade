@@ -11,7 +11,7 @@ export interface IJson {
 }
 
 /**
- * Default log severity.
+ * Supported log severity.
  */
 export enum LogSeverity {
     DEBUG = 'debug',
@@ -22,8 +22,8 @@ export enum LogSeverity {
 }
 
 /**
- * Default log numeric level.  Used the same number as
- * [GCloud's LogSeverity](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#LogSeverity)
+ * Supported numeric log level.  Used the same number as
+ * [GCloud's LogSeverity](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#LogSeverity).
  */
 export enum LogLevel {
     DEBUG = 100,
@@ -34,7 +34,8 @@ export enum LogLevel {
 }
 
 /**
- * A log entry
+ * A log entry.  The `level` is translated from `severity` using value defined by {@link LogLevel}.
+ * If a specific `severity` is not found, it will be set to `INFO = 200`.
  */
 export interface IJLogEntry {
     /** Logger name */
@@ -48,7 +49,7 @@ export interface IJLogEntry {
     /** error object */
     error?: Error,
     /** additional attributes to log */
-    data: IJson,
+    data?: IJson,
     /** timestamp of the log */
     time: Date
 }

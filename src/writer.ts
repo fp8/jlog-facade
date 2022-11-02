@@ -60,7 +60,7 @@ export class LogWriter {
     /**
      * Clear all log destinations
      */
-    public clearDestinatios(): void {
+    public clearDestinations(): void {
         Object.keys(this.destinations).forEach(
             key => delete this.destinations[key]
         )
