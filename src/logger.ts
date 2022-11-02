@@ -4,11 +4,12 @@ import {
     AbstractLoggable
 } from './core';
 
+import { isEmpty } from './helper';
 import {LogWriter} from './writer';
 import {LoggableError} from './models';
 
 
-type TLoggableParams = AbstractLoggable | IJson;
+export type TLoggableParams = AbstractLoggable | IJson;
 
 /**
  * Additional object type that can be passed to be written to log.  Can be one of:
@@ -90,7 +91,7 @@ export class JLogger {
      * @param input 
      * @returns 
      */
-    private mergeParams(input: TLoggableParams[]): IJson {
+    private mergeParams(input: TLoggableParams[]): IJson | undefined {
         const entries = input.map(entry => {
             if (entry instanceof AbstractLoggable) {
                 return entry.toIJson();
@@ -99,7 +100,13 @@ export class JLogger {
             }
         });
 
-        return Object.assign({}, ...entries);
+        const result = Object.assign({}, ...entries);
+
+        if (isEmpty(result)) {
+            return undefined;
+        } else {
+            return result;
+        }
     }
 
     /**

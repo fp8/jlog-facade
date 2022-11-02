@@ -49,7 +49,7 @@ export interface IJLogEntry {
     /** error object */
     error?: Error,
     /** additional attributes to log */
-    data: IJson,
+    data?: IJson,
     /** timestamp of the log */
     time: Date
 }

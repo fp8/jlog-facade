@@ -66,13 +66,16 @@ export class LoggerFactory {
 export {
     TJsonValue, IJson, IJLogEntry,
     LogSeverity, LogLevel,
+    AbstractLoggable,
     AbstractLogDestination, AbstractAsyncLogDestination
 } from './core';
 
 export * from './models';
+export * from './dest';
 
 // Allow user to create a customized instance of JLogger
 export {
     JLogger
 };
-export { TLoggableEntries } from './logger';
+export { TLoggableParams, TLoggableEntries } from './logger';
+export { TLogDestination } from './writer';
