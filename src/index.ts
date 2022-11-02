@@ -38,7 +38,7 @@ export class LoggerFactory {
      * Clear all log destinations
      */
     public static clearLogDestination(): void {
-        this.writer.clearDestinatios();
+        this.writer.clearDestinations();
     }
 }
 
