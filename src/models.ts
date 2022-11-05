@@ -3,17 +3,57 @@ import {
     AbstractLoggable
 } from "./core";
 
+export type TLoggableType = TJsonValue | AbstractLoggable;
+
 /**
- * Allow adding of a simple key/value pair to a log
+ * Allow adding of a simple key/value pair to a log.  When multiple
+ * key is detected, the first key logged prevails over subsequent
+ * value assigned to the same key
  */
 export class KV extends AbstractLoggable {
-    constructor(private key: string, private value: TJsonValue) {
+    constructor(public readonly key: string, private value: TLoggableType) {
         super();
     }
 
     toIJson(): IJson {
         const result: IJson = {};
-        result[this.key] = this.value;
+        const value = this.value;
+        if (value instanceof AbstractLoggable) {
+            result[this.key] = value.toIJson();
+        } else {
+            result[this.key] = value;
+        }
+        
+        return result;
+    }
+}
+
+/**
+ * Allow adding of a key/value pair to a log where resulting value
+ * is always a list.  When multiple key is detected, the values
+ * are merged.
+ */
+ export class Label extends AbstractLoggable {
+    private _values: TLoggableType[];
+
+    constructor(public readonly key: string, ...values: TLoggableType[]) {
+        super();
+        this._values = values;
+    }
+
+    public get values(): TJsonValue[] {
+        return this._values.map(entry => {
+            if (entry instanceof AbstractLoggable) {
+                return entry.toIJson();
+            } else {
+                return entry;
+            }
+        });
+    }
+
+    toIJson(): IJson {
+        const result: IJson = {};
+        result[this.key] = this.values;
         return result;
     }
 }

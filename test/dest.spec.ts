@@ -34,7 +34,7 @@ class TestSimpleJsonDestination extends SimpleJsonDestination {
 
 
 
-describe.only('dest', () => {
+describe('dest', () => {
     const logger = LoggerFactory.create('my-logger');
 
     beforeEach(() => {

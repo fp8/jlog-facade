@@ -1,15 +1,15 @@
 import {
+    TJsonValue, IJson,
     LogSeverity, LogLevel,
-    IJLogEntry, IJson,
-    AbstractLoggable
+    IJLogEntry, AbstractLoggable
 } from './core';
 
-import { isEmpty } from './helper';
+import {isEmpty} from './helper';
 import {LogWriter} from './writer';
-import {LoggableError} from './models';
+import {LoggableError, Label} from './models';
 
 
-export type TLoggableParams = AbstractLoggable | IJson;
+export type TLoggableParam = AbstractLoggable | IJson;
 
 /**
  * Additional object type that can be passed to be written to log.  Can be one of:
@@ -18,7 +18,7 @@ export type TLoggableParams = AbstractLoggable | IJson;
  * - Instance of AbstractLoggable
  * - IJson
  */
-export type TLoggableEntries = Error | TLoggableParams;
+export type TLoggableEntry = Error | TLoggableParam;
 
 /**
  * Json Logger objact.  Do not use this class directly; always create an instance of JLogger using {@link LoggerFactory}
@@ -55,9 +55,9 @@ export class JLogger {
      * @param input 
      * @returns 
      */
-    private extractError(message: string | Error, input: TLoggableEntries[]): [Error | undefined, TLoggableParams[]] {
+    private extractError(message: string | Error, input: TLoggableEntry[]): [Error | undefined, TLoggableParam[]] {
         let errorIsSet = false;
-        const result: TLoggableParams[] = [];
+        const result: TLoggableParam[] = [];
 
         let error: Error | undefined = undefined;
         
@@ -86,21 +86,46 @@ export class JLogger {
     }
 
     /**
-     * Collapse all LoggableParams into a single IJson
+     * Collapse all LoggableParams into a single IJson.  If duplicate key is passed, the
+     * first entry in the list will prevail.  Intentionally not converting dup key to a
+     * list as this could cause data type collision in system like logstash
      *
      * @param input 
      * @returns 
      */
-    private mergeParams(input: TLoggableParams[]): IJson | undefined {
-        const entries = input.map(entry => {
-            if (entry instanceof AbstractLoggable) {
-                return entry.toIJson();
-            } else {
-                return entry;
-            }
-        });
+    private mergeParams(input: TLoggableParam[]): IJson | undefined {
+        const entries: IJson[] = [];
+        const tags: { [key: string]: TJsonValue[]} = {};
 
+        // Separate input into entries and tags, making sure that in case of
+        // duplicated key, first entry prevail
+        for (const entry of input.reverse()) {
+            if (entry instanceof Label) {
+                // Tag's value is a list and dupp'd key value should be merged
+                const key = entry.key;
+                let value: Set<TJsonValue>;
+
+                if (key in tags) {
+                    value = new Set([...entry.values, ...tags[key]]);
+                } else {
+                    value = new Set([...entry.values]);
+                }
+                // only add if there are entries
+                if (value.size) {
+                    tags[key] = Array.from(value.values());
+                }
+            } else if (entry instanceof AbstractLoggable) {
+                entries.push(entry.toIJson());
+            } else {
+                entries.push(entry);
+            } 
+        }
         const result = Object.assign({}, ...entries);
+
+        // Add tags to the result
+        for (const [k, v] of Object.entries(tags)) {
+            result[k] = v;
+        }
 
         if (isEmpty(result)) {
             return undefined;
@@ -118,7 +143,7 @@ export class JLogger {
      * @param message string or instance of Error
      * @param rest 
      */
-    protected log(severity: string | LogSeverity, message: string | Error, ...rest: TLoggableEntries[]): void {
+    protected log(severity: string | LogSeverity, message: string | Error, ...rest: TLoggableEntry[]): void {
         const writer = LogWriter.getInstance();
 
         // skip any logging if no destination has been set
@@ -154,27 +179,27 @@ export class JLogger {
     }
 
     /** Write a {@link LogSeverity.DEBUG} severity log */
-    public debug(message: string | Error, ...rest: TLoggableEntries[]): void {
+    public debug(message: string | Error, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.DEBUG, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.INFO} severity log */
-    public info(message: string | Error, ...rest: TLoggableEntries[]): void {
+    public info(message: string | Error, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.INFO, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.WARNING} severity log */
-    public warn(message: string | Error, ...rest: TLoggableEntries[]): void {
+    public warn(message: string | Error, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.WARNING, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.ERROR} severity log */
-    public error(message: string | Error, ...rest: TLoggableEntries[]): void {
+    public error(message: string | Error, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.ERROR, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.PANIC} severity log */
-    public panic(message: string | Error, ...rest: TLoggableEntries[]): void {
+    public panic(message: string | Error, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.PANIC, message, ...rest);
     }
 
@@ -185,7 +210,7 @@ export class JLogger {
      * @param maxRetry number of time to retry.  Default to retry for 20 times.
      * @returns 
      */
-    public async hasLogCompleted(maxRetry=20): Promise<void> {
+    public async logWritten(maxRetry=20): Promise<void> {
         const writer = LogWriter.getInstance();
         return writer.waitProcessComplete(maxRetry);
     }
