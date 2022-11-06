@@ -1,0 +1,26 @@
+name: Yarn Build Actions
+
+on: [push]
+
+run-name: ${{ github.actor }} 
+
+jobs:
+  yarn-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@doc-pages
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.13.x'
+          cache: npm
+
+      - name: Install Dependencies
+        run: yarn install --production
+        shell: bash
+
+      - name: Build
+        run: yarn build
+        shell: bash

@@ -34,7 +34,7 @@ export function isArray(input: unknown): input is Array<unknown> {
  * 
  * @param input 
  */
-export function isObject(input: unknown): input is Object {
+export function isObject(input: unknown): input is Record<string, unknown> {
     if (isNullOrUndefined(input)) {
         return false;
     }
