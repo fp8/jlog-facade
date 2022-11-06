@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: '16.13.x'
           cache: npm
+          cache-dependency-path: yarn.lock
 
       - name: Install Dependencies
         run: yarn install --production
