@@ -15,7 +15,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install Dependencies
-        run: yarn install --production
+        run: yarn install
         shell: bash
 
       - name: Build
