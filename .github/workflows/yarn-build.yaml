@@ -28,6 +28,11 @@ jobs:
           name: github-pages
           path: build/docs/
 
+      - name: Publish npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH }}
+
   deploy:
     needs: build
 
@@ -45,7 +50,4 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
 
-      - name: Publish npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH }}
+
