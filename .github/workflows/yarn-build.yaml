@@ -21,3 +21,12 @@ jobs:
       - name: Build
         run: yarn build
         shell: bash
+
+      - name: Upload Docs as Artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          name: github-pages
+          path: build/docs/
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
