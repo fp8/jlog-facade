@@ -1,6 +1,9 @@
-name: Yarn Build Actions
+name: Yarn Build, NPM and github pages deploy
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
 
 run-name: ${{ github.actor }} 
 

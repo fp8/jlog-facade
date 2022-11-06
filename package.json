@@ -1,6 +1,6 @@
 {
     "name": "jlog-facade",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Logger Facade with JSON as LogEntry",
     "main": "lib/index.js",
     "repository": "https://github.com/fp8/jlog-facade.git",
