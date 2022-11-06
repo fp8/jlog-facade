@@ -8,21 +8,59 @@
 }
 
 /**
+ * Check if input is null or undefined
+ *
+ * @param input 
+ * @returns 
+ */
+export function isNullOrUndefined(input: unknown): input is null | undefined {
+    return (input === null || input === undefined);
+}
+
+/**
+ * Check if an input is an array
+ *
+ * @param input 
+ * @returns 
+ */
+export function isArray(input: unknown): input is Array<unknown> {
+    if (isNullOrUndefined(input)) {
+        return false;
+    }
+    return Array.isArray(input);
+}
+
+/**
+ * 
+ * @param input 
+ */
+export function isObject(input: unknown): input is Record<string, unknown> {
+    if (isNullOrUndefined(input)) {
+        return false;
+    }
+    return (typeof input === 'object' && !isArray(input));
+}
+
+/**
  * Simple is object empty check
  * 
  * ref: https://stackoverflow.com/a/59787784/2355087
  */
-export function isEmpty(input: unknown | null | undefined): boolean {
-    if (input === undefined || input === null) {
+export function isEmpty(input: unknown): boolean  {
+    if (isNullOrUndefined(input)) {
         return true;
     }
-    for (const i in input) return false;
 
-    // Special processing for Date object
-    if (input instanceof Date) {
+    if (typeof input === 'string' || isArray(input)) {
+        return input.length === 0;
+    } else if (input instanceof Date) {
+        // Date is an object but has not properties
         return false;
-    } else {
+    } else if (isObject(input)) {
+        for (const i in input) return false;
         return true;
+    } else {
+        return false;
     }
 }
 

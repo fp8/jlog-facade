@@ -1,0 +1,54 @@
+name: Yarn Build, NPM and github pages deploy
+
+on:
+  release:
+    types: [published]
+
+run-name: ${{ github.actor }} 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.13.x'
+          cache: 'yarn'
+
+      - name: Install Dependencies
+        run: yarn install
+        shell: bash
+
+      - name: Build
+        run: yarn build
+        shell: bash
+
+      - name: Upload Docs as Artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          name: github-pages
+          path: build/docs/
+
+      - name: Authenticate with private NPM package
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH }}" > ~/.npmrc
+
+      - name: Publish npm
+        run: npm publish
+
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1

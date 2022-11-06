@@ -77,5 +77,5 @@ export * from './dest';
 export {
     JLogger
 };
-export { TLoggableParams, TLoggableEntries } from './logger';
+export { TLoggableParam, TLoggableEntry } from './logger';
 export { TLogDestination } from './writer';
