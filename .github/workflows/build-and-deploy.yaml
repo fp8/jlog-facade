@@ -1,9 +1,8 @@
 name: Yarn Build, NPM and github pages deploy
 
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [published]
 
 run-name: ${{ github.actor }} 
 
