@@ -1,10 +1,8 @@
 # jlog-facade
 
-## What?
-
 This is a simple logger façade that focusing on creating a JSON output for typescript projects.
 
-### Logger
+## Usage
 
 A [LoggerFactory](https://fp8.github.io/jlog-facade/classes/LoggerFactory.html) is used to create a new instance of a [JLogger](https://fp8.github.io/jlog-facade/classes/JLogger.html) which doesn't output any log until a log destination is set:
 
@@ -64,7 +62,11 @@ If one must ensure that last async log has been written, the following promise c
 await logger.hasLogCompleted();
 ```
 
-## Why?
+## Documentation
+
+* [jlog-facade](https://fp8.github.io/jlog-facade/)
+
+## Why Another Facade?
 
 Working with project in both Kotlin and Typescript, I have come to miss the abstraction allowed by [slf4j](https://www.slf4j.org/) in the JVM world.  Another challenge I face is the need to produce a JSON based output for cloud service provider.
 
