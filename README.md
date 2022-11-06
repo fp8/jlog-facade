@@ -6,7 +6,7 @@ This is a simple logger façade that focusing on creating a JSON output for type
 
 ### Logger
 
-A `LoggerFactory` is used to create a new instance of a `JLogger` which doesn't output any log until a log destination is set:
+A [LoggerFactory](https://fp8.github.io/jlog-facade/classes/LoggerFactory.html) is used to create a new instance of a [JLogger](https://fp8.github.io/jlog-facade/classes/JLogger.html) which doesn't output any log until a log destination is set:
 
 ```ts
 const logger = LoggerFactory.create('my-logger');
@@ -22,7 +22,7 @@ logger.error('Failed to processing incoming request', err);
 
 ### Creating JSON Entry
 
-`JLogger` accept `IJson` as additional attribute to be added to the output:
+[JLogger](https://fp8.github.io/jlog-facade/classes/JLogger.html) accept [IJson](https://fp8.github.io/jlog-facade/interfaces/IJson.html) as additional attribute to be added to the output:
 
 ```ts
 logger.info('The process has started', {processId: 123456});
@@ -30,9 +30,9 @@ logger.info('The process has started', {processId: 123456});
 
 #### AbstractLoggable and KV
 
-Logger method also accept an `AbstractLoggable` which exposes `.toJson` method which allow any custom object to be written to the log.  By default, any duplicated keys are resolved by first entry having priority over any subsquent keys.
+Logger method also accept an [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) which exposes `.toJson` method which allow any custom object to be written to the log.  By default, any duplicated keys are resolved by first entry having priority over any subsquent keys.
 
-`KV` is an implementation of `AbstractLoggable` that allows creation of simple key/value pair objects to be written to log where value can be another instance of `AbstractLoggable`:
+[KV](https://fp8.github.io/jlog-facade/classes/KV.html) is an implementation of [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) that allows creation of simple key/value pair objects to be written to log where value can be another instance of [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html):
 
 ```ts
 logger.info('The process has started', new KV('processId', 123456), new KV('processId', 888));
@@ -42,7 +42,7 @@ The value of the `processId` is `123456` as it's the first value passed.
 
 #### Label
 
-Another built-in `AbstractLoggable` is `Label` that allow caller to pass a key and one or more values.  Please note that value of the `Label` is always a list, even if only one value is passed to constructor.  The duplicate keys of `Label` passed are merged:
+Another built-in [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) is [Label](https://fp8.github.io/jlog-facade/classes/Label.html) that allow caller to pass a key and one or more values.  Please note that value of the [Label](https://fp8.github.io/jlog-facade/classes/Label.html) is always a list, even if only one value is passed to constructor.  The duplicate keys of [Label](https://fp8.github.io/jlog-facade/classes/Label.html) passed are merged:
 
 ```ts
 logger.info('The process has started', new Label('processId', 123456), new Label('processId', 888));
@@ -54,9 +54,9 @@ The value of the `processId` is `[123456, 888]`.
 
 There are 3 possible type of log destination:
 
-1. A synchronous class that extends `AbstractLogDestination`
-1. An asynchronous class that extends `AbstractAsyncLogDestination`
-1. An instance of `Writable` stream
+1. A synchronous class that extends [AbstractLogDestination](https://fp8.github.io/jlog-facade/classes/AbstractLogDestination.html)
+1. An asynchronous class that extends [AbstractAsyncLogDestination](https://fp8.github.io/jlog-facade/classes/AbstractAsyncLogDestination.html)
+1. An instance of [Writable](https://nodejs.org/api/stream.html#class-streamwritable) stream
 
 If one must ensure that last async log has been written, the following promise can be used: 
 
