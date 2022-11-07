@@ -1,7 +1,7 @@
 {
     "name": "jlog-facade",
-    "version": "0.2.0",
-    "description": "Logger Facade with JSON as LogEntry",
+    "version": "0.3.0",
+    "description": "Logger façade that focusing on creating a JSON output for typescript projects",
     "main": "lib/index.js",
     "repository": "https://github.com/fp8/jlog-facade.git",
     "author": "Marcos Lin <marcos.lin@farport.co>",

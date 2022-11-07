@@ -18,6 +18,12 @@ logger.info(`Process started at port $PORT`);
 logger.error('Failed to processing incoming request', err);
 ```
 
+### Install
+
+```
+npm i jlog-facade
+```
+
 ### Creating JSON Entry
 
 To facilitate generation of JSON output, [JLogger](https://fp8.github.io/jlog-facade/classes/JLogger.html) accept [IJson](https://fp8.github.io/jlog-facade/interfaces/IJson.html) as additional attributes to be added to the output:
@@ -79,7 +85,7 @@ LoggerFactory.addLogDestination(new SimpleJsonDestination());
 
 * [jlog-facade](https://fp8.github.io/jlog-facade/)
 
-## Why Another Facade?
+## Why Another Facade?
 
 Working with project in both Kotlin and Typescript, I have come to miss the abstraction allowed by [slf4j](https://www.slf4j.org/) in the JVM world.  Another challenge I face is the need to produce a JSON based output for cloud service provider.
 
