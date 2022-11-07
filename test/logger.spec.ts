@@ -173,7 +173,7 @@ describe('logger', () => {
         dest.addDestination(new TestDestination());
         logger.info(
             'PAsDPNMaO3',
-            new Label('type1', 'BCsfaVPzhS'),
+            new Label('type1', 7095),
             new Label('type1', 'jjdBmyie9f', '61QRWknheN'),
             new Label('type2', 'dVRZjUn5Il'),
             new Label('type3')
@@ -186,7 +186,9 @@ describe('logger', () => {
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('PAsDPNMaO3');
         expect(entry.error).is.undefined;
-        expect(entry.data?.type1).is.eql(['BCsfaVPzhS', 'jjdBmyie9f', '61QRWknheN']);
+
+        // The mixing type in a label is a possible but not desirable
+        expect(entry.data?.type1).is.eql([7095, 'jjdBmyie9f', '61QRWknheN']);
         expect(entry.data?.type2).is.eql(['dVRZjUn5Il']);
         expect(entry.data?.type3).is.undefined;
     });

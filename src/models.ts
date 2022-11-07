@@ -10,8 +10,8 @@ export type TLoggableType = TJsonValue | AbstractLoggable;
  * key is detected, the first key logged prevails over subsequent
  * value assigned to the same key
  */
-export class KV extends AbstractLoggable {
-    constructor(public readonly key: string, private value: TLoggableType) {
+export class KV<T extends TLoggableType> extends AbstractLoggable {
+    constructor(public readonly key: string, private value: T) {
         super();
     }
 
@@ -33,10 +33,10 @@ export class KV extends AbstractLoggable {
  * is always a list.  When multiple key is detected, the values
  * are merged.
  */
- export class Label extends AbstractLoggable {
+ export class Label<T extends TLoggableType> extends AbstractLoggable {
     private _values: TLoggableType[];
 
-    constructor(public readonly key: string, ...values: TLoggableType[]) {
+    constructor(public readonly key: string, ...values: T[]) {
         super();
         this._values = values;
     }
