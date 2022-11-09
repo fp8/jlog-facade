@@ -125,6 +125,92 @@ describe('logger', () => {
         expect(entry.error).is.equal(error);
     });
 
+    it('Test Error with Message', () => {
+        dest.addDestination(new TestDestination());
+        const error = new Error('ldyoMdOhv9'); 
+        logger.error('Error message for ldyoMdOhv9', error);
+
+        expect(entryCollector.length).is.eql(1);
+        const entry = entryCollector[0];
+
+        expect(entry.severity).is.eql('error');
+        expect(entry.level).is.eql(500);
+        expect(entry.message).is.eql('Error message for ldyoMdOhv9');
+        expect(entry.error).is.equal(error);
+    });
+
+    it('Test invalid string as Error', () => {
+        dest.addDestination(new TestDestination());
+        const err = 'This is not an error' as unknown as Error;
+        logger.error(err);
+
+        expect(entryCollector.length).is.eql(1);
+        expect(entryCollector[0].message).is.eql('This is not an error');
+        expect(entryCollector[0].error).is.undefined;
+
+        logger.error('Message is given', err);
+
+        expect(entryCollector.length).is.eql(2);
+        expect(entryCollector[1].message).is.eql('Message is given');
+        expect(entryCollector[1].error).is.undefined;
+
+        // The string get broken down into an object and added to data
+        // Not addressing this as an issue as a wrong object is intentionally forced into the logger
+        const data = entryCollector[1].data;
+        if (data !== undefined) {
+            expect(data['0']).is.eql('T');
+        } else {
+            throw new Error('Unexpected undefined .data');
+        }
+        /* The err becomes:
+        data: {
+            '0': 'T',
+            '1': 'h',
+            '2': 'i',
+            '3': 's',
+            '4': ' ',
+            '5': 'i',
+            '6': 's',
+            '7': ' ',
+            '8': 'n',
+            '9': 'o',
+            '10': 't',
+            '11': ' ',
+            '12': 'a',
+            '13': 'n',
+            '14': ' ',
+            '15': 'e',
+            '16': 'r',
+            '17': 'r',
+            '18': 'o',
+            '19': 'r'
+        }
+        */
+    });
+
+    it('Test invalid number as Error', () => {
+        dest.addDestination(new TestDestination());
+        const err = 4540 as unknown as Error;
+        logger.error('Error message', err);
+
+        expect(entryCollector.length).is.eql(1);
+
+        const entry: Partial<IJLogEntry> = entryCollector[0];
+        delete entry.time;
+
+        // The `4540` number is simply ignored
+        expect(entry).to.eql(
+            {
+                name: 'test-logger',
+                severity: 'error',
+                level: 500,
+                message: 'Error message',
+                error: undefined,
+                data: undefined,
+            }
+        );
+    });
+
     it('Test IJson', () => {
         dest.addDestination(new TestDestination());
         logger.info('IJson log', {key_ycUrTEToWP: 'ycUrTEToWP'});
