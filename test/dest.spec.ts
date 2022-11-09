@@ -34,7 +34,7 @@ class TestSimpleJsonDestination extends SimpleJsonDestination {
 
 
 
-describe('dest', () => {
+describe.only('dest', () => {
     const logger = LoggerFactory.create('my-logger');
 
     beforeEach(() => {
@@ -78,6 +78,26 @@ describe('dest', () => {
         LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
         logger.info('Info message for UurqWHYMyJ', new KV('processId', 'UurqWHYMyJ'));
         expect(logCollector).is.eql(['{"m":"I|Info message for UurqWHYMyJ","processId":"UurqWHYMyJ"}']);
+    });
+
+    it.only('json - error', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        const error = new Error('vOGQbtxvfD');
+        logger.error(error);
+        expect(logCollector).is.eql(['{"m":"E|vOGQbtxvfD","e":"Error: vOGQbtxvfD"}']);
+    });
+
+    it.only('json - error with stack', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(true));
+        const error = new Error('qbsKviHUSV');
+        logger.warn('qbsKviHUSV did not work', error);
+
+        expect(logCollector.length).is.eql(1);
+
+        const json = JSON.parse(logCollector[0]);
+        expect(json.m).is.eql('W|qbsKviHUSV did not work');
+        expect(json.e).is.eql('Error: qbsKviHUSV');
+        expect(json.s).satisfies((message: string) => message.startsWith('Error: qbsKviHUSV'));
     });
 
 });
