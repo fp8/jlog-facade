@@ -13,11 +13,11 @@ export interface ISimpleJsonOutput extends IJson {
  * - `t`: time of the log in the ISO format
  * - `m`: message that start with first char of severity + `|` + log message
  * - `e`: error message if Error object passed
- * - `s`: error stack trace
+ * - `s`: error stack trace (unless `logStackTrace` set to false)
  * - other payload sent to the logger
  */
 export class SimpleJsonDestination extends AbstractLogDestination {
-    constructor(private logStackTrace = false) {
+    constructor(private logStackTrace = true) {
         super();
     }
 

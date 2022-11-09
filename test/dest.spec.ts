@@ -81,14 +81,14 @@ describe.only('dest', () => {
     });
 
     it.only('json - error', () => {
-        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(false));
         const error = new Error('vOGQbtxvfD');
         logger.error(error);
         expect(logCollector).is.eql(['{"m":"E|vOGQbtxvfD","e":"Error: vOGQbtxvfD"}']);
     });
 
     it.only('json - error with stack', () => {
-        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(true));
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
         const error = new Error('qbsKviHUSV');
         logger.warn('qbsKviHUSV did not work', error);
 
