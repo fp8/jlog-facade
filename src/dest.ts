@@ -13,17 +13,28 @@ export interface ISimpleJsonOutput extends IJson {
  * - `t`: time of the log in the ISO format
  * - `m`: message that start with first char of severity + `|` + log message
  * - `e`: error message if Error object passed
+ * - `s`: error stack trace (unless `logStackTrace` set to false)
  * - other payload sent to the logger
  */
 export class SimpleJsonDestination extends AbstractLogDestination {
+    constructor(private logStackTrace = true) {
+        super();
+    }
+
     protected formatOutput(entry: IJLogEntry): ISimpleJsonOutput {
         // Create a clone of data
         const data: IJson = Object.assign({}, entry.data);
 
+        let stack: string | undefined = undefined;
+        if (this.logStackTrace && entry.error) {
+            stack = entry.error.stack?.toString();
+        }
+
         return {
             t: entry.time.toISOString(),
             m: `${entry.severity.toUpperCase().charAt(0)}|${entry.message}`,
-            e: entry.error?.message,
+            e: entry.error?.toString(),
+            s: stack,
             ...data
         };
     }
