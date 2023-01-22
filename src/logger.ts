@@ -1,12 +1,13 @@
 import {
     TJsonValue, IJson,
     LogSeverity, LogLevel,
-    IJLogEntry, AbstractLoggable
+    IJLogEntry, AbstractLoggable,
+    mergeIJson
 } from './core';
 
-import {isEmpty} from './helper';
+import {isEmpty, isObject} from './helper';
 import {LogWriter} from './writer';
-import {LoggableError, Label} from './models';
+import {LoggableError} from './models';
 
 
 export type TLoggableParam = AbstractLoggable | IJson;
@@ -86,52 +87,32 @@ export class JLogger {
     }
 
     /**
-     * Collapse all LoggableParams into a single IJson.  If duplicate key is passed, the
-     * first entry in the list will prevail.  Intentionally not converting dup key to a
+     * Collapse all LoggableParams into a loggables and a data variables.  The first
+     * entry in the list will prevail.  Intentionally not converting dup key to a
      * list as this could cause data type collision in system like logstash
+     * 
+     * **Note**: This method perform a shallow merge for data
      *
      * @param input 
      * @returns 
      */
-    private mergeParams(input: TLoggableParam[]): IJson | undefined {
-        const entries: IJson[] = [];
-        const tags: { [key: string]: TJsonValue[]} = {};
+    private extractData(input: TLoggableParam[]): {loggables: AbstractLoggable[], data: IJson, values: TJsonValue[]} {
+        const loggables: AbstractLoggable[] = [];
+        const data: IJson = {};
+        const values: TJsonValue[] = [];
 
-        // Separate input into entries and tags, making sure that in case of
-        // duplicated key, first entry prevail
         for (const entry of input.reverse()) {
-            if (entry instanceof Label) {
-                // Tag's value is a list and dupp'd key value should be merged
-                const key = entry.key;
-                let value: Set<TJsonValue>;
-
-                if (key in tags) {
-                    value = new Set([...entry.values, ...tags[key]]);
-                } else {
-                    value = new Set([...entry.values]);
-                }
-                // only add if there are entries
-                if (value.size) {
-                    tags[key] = Array.from(value.values());
-                }
-            } else if (entry instanceof AbstractLoggable) {
-                entries.push(entry.toIJson());
+            if (entry instanceof AbstractLoggable) {
+                loggables.push(entry);
+            } else if (isObject(entry)) {
+                // Merge incoming IJson into data
+                mergeIJson(data, entry);
             } else {
-                entries.push(entry);
-            } 
-        }
-        const result = Object.assign({}, ...entries);
-
-        // Add tags to the result
-        for (const [k, v] of Object.entries(tags)) {
-            result[k] = v;
+                values.push(entry);
+            }
         }
 
-        if (isEmpty(result)) {
-            return undefined;
-        } else {
-            return result;
-        }
+        return {loggables, data, values};
     }
 
     /**
@@ -155,7 +136,6 @@ export class JLogger {
 
         // Extract data to log from params
         const [error, params] = this.extractError(message, rest);
-        const data = this.mergeParams(params);
 
         // Set the message and error to be set in the log entry
         let messageToUse: string;
@@ -171,9 +151,21 @@ export class JLogger {
             level,
             message: messageToUse,
             error,
-            data,
             time: new Date()
         };
+
+        // Add loggables and data
+        const {loggables, data, values} = this.extractData(params);
+        
+        if (!isEmpty(loggables)) {
+            entry.loggables = loggables;
+        }
+        if (!isEmpty(data)) {
+            entry.data = data;
+        }
+        if (!isEmpty(values)) {
+            entry.values = values;
+        }
 
         writer.write(entry);
     }

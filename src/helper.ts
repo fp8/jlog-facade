@@ -1,3 +1,5 @@
+// STAND-ALONE PACKAGE -- Must not import anything from this project
+
 /**
  * A simple delay function 
  */

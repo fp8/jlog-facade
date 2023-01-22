@@ -34,7 +34,7 @@ class TestSimpleJsonDestination extends SimpleJsonDestination {
 
 
 
-describe.only('dest', () => {
+describe('dest', () => {
     const logger = LoggerFactory.create('my-logger');
 
     beforeEach(() => {
@@ -80,14 +80,14 @@ describe.only('dest', () => {
         expect(logCollector).is.eql(['{"m":"I|Info message for UurqWHYMyJ","processId":"UurqWHYMyJ"}']);
     });
 
-    it.only('json - error', () => {
+    it('json - error', () => {
         LoggerFactory.addLogDestination(new TestSimpleJsonDestination(false));
         const error = new Error('vOGQbtxvfD');
         logger.error(error);
         expect(logCollector).is.eql(['{"m":"E|vOGQbtxvfD","e":"Error: vOGQbtxvfD"}']);
     });
 
-    it.only('json - error with stack', () => {
+    it('json - error with stack', () => {
         LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
         const error = new Error('qbsKviHUSV');
         logger.warn('qbsKviHUSV did not work', error);

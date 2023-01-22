@@ -1,12 +1,12 @@
 import {expect} from './testlib';
 
-import {IJson, KV, Label} from '@fp8proj';
+import {IJson, KV, Tags} from '@fp8proj';
 
 class KVS extends KV<string> {}
 
-class KVLabel extends KV<Label<string>> {}
+class KVLabel extends KV<Tags<number>> {}
 
-class StringLabel extends Label<string> {}
+class StringLabel extends Tags<string> {}
 
 
 describe('models', () => {
@@ -16,7 +16,7 @@ describe('models', () => {
     });
 
     it('simple KVLabel', () => {
-        const entry = new KVLabel('testKVLabel', new Label('testLabel', 8090, 6860));
+        const entry = new KVLabel('testKVLabel', new Tags('testLabel', 8090, 6860));
         expect(entry.toIJson()).to.eql({ testKVLabel: {testLabel: [8090, 6860]} });
     });
 

@@ -4,7 +4,7 @@ import { Writable } from 'stream';
 import {
     IJLogEntry, LoggerFactory,
     AbstractLogDestination, AbstractAsyncLogDestination,
-    KV, Label
+    KV, Tags, mergeLoggableModels, buildOutputDataForDestination
 } from '@fp8proj';
 import {LogWriter} from '@fp8proj/writer';
 
@@ -152,40 +152,9 @@ describe('logger', () => {
 
         expect(entryCollector.length).is.eql(2);
         expect(entryCollector[1].message).is.eql('Message is given');
+        expect(entryCollector[1].values).is.eql(['This is not an error']);
         expect(entryCollector[1].error).is.undefined;
-
-        // The string get broken down into an object and added to data
-        // Not addressing this as an issue as a wrong object is intentionally forced into the logger
-        const data = entryCollector[1].data;
-        if (data !== undefined) {
-            expect(data['0']).is.eql('T');
-        } else {
-            throw new Error('Unexpected undefined .data');
-        }
-        /* The err becomes:
-        data: {
-            '0': 'T',
-            '1': 'h',
-            '2': 'i',
-            '3': 's',
-            '4': ' ',
-            '5': 'i',
-            '6': 's',
-            '7': ' ',
-            '8': 'n',
-            '9': 'o',
-            '10': 't',
-            '11': ' ',
-            '12': 'a',
-            '13': 'n',
-            '14': ' ',
-            '15': 'e',
-            '16': 'r',
-            '17': 'r',
-            '18': 'o',
-            '19': 'r'
-        }
-        */
+        expect(entryCollector[1].data).is.undefined;
     });
 
     it('Test invalid number as Error', () => {
@@ -198,7 +167,7 @@ describe('logger', () => {
         const entry: Partial<IJLogEntry> = entryCollector[0];
         delete entry.time;
 
-        // The `4540` number is simply ignored
+        // The `4540` is captured in the .values 
         expect(entry).to.eql(
             {
                 name: 'test-logger',
@@ -206,7 +175,7 @@ describe('logger', () => {
                 level: 500,
                 message: 'Error message',
                 error: undefined,
-                data: undefined,
+                values: [4540]
             }
         );
     });
@@ -237,7 +206,11 @@ describe('logger', () => {
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('v8aNlgLIfi');
         expect(entry.error).is.undefined;
-        expect(entry.data?.key_k6HraLIn8I).is.eql('k6HraLIn8I');
+        expect(entry.data).is.undefined;
+
+        expect(entry.loggables).is.not.undefined;
+        const loggables = entry.loggables!;
+        expect(loggables[0].toIJson()).is.eql({key_k6HraLIn8I: 'k6HraLIn8I'});
     });
 
     it('Test KV nested', () => {
@@ -252,17 +225,23 @@ describe('logger', () => {
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('nDu4wXyXZq');
         expect(entry.error).is.undefined;
-        expect(entry.data?.nestedKey).is.eql({'key_Tg3YEpbkkD': 'Tg3YEpbkkD'});
+        expect(entry.data).is.undefined;
+
+        expect(entry.loggables).is.not.undefined;
+        const loggables = entry.loggables!;
+        expect(loggables[0].toIJson()).is.eql({
+            nestedKey: {key_Tg3YEpbkkD: 'Tg3YEpbkkD'}
+        });
     });
 
-    it('Test Label', () => {
+    it('Test Tag', () => {
         dest.addDestination(new TestDestination());
         logger.info(
             'PAsDPNMaO3',
-            new Label('type1', 7095),
-            new Label('type1', 'jjdBmyie9f', '61QRWknheN'),
-            new Label('type2', 'dVRZjUn5Il'),
-            new Label('type3')
+            new Tags('type1', 7095),
+            new Tags('type1', 'jjdBmyie9f', '61QRWknheN'),
+            new Tags('type2', 'dVRZjUn5Il'),
+            new Tags('type3')
         );
 
         expect(entryCollector.length).is.eql(1);
@@ -272,21 +251,34 @@ describe('logger', () => {
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('PAsDPNMaO3');
         expect(entry.error).is.undefined;
+        expect(entry.data).is.undefined;
 
-        // The mixing type in a label is a possible but not desirable
-        expect(entry.data?.type1).is.eql([7095, 'jjdBmyie9f', '61QRWknheN']);
-        expect(entry.data?.type2).is.eql(['dVRZjUn5Il']);
-        expect(entry.data?.type3).is.undefined;
+        // The mixing type in a tag is a possible but not desirable
+        expect(entry.loggables).is.eql([
+            new Tags('type3'),
+            new Tags('type2', 'dVRZjUn5Il'),
+            new Tags('type1', 'jjdBmyie9f', '61QRWknheN'),
+            new Tags('type1', 7095)
+        ]);
+
+        const {loggableJson, loggableValues} = mergeLoggableModels(...entry.loggables!);
+        expect(loggableJson).is.eql({
+            type3: [],
+            type2: [ 'dVRZjUn5Il' ],
+            type1: [ 7095 ]
+        });
+        expect(loggableValues).is.eql([]);
+
     });
 
     it('Test KVs and Tags', () => {
         dest.addDestination(new TestDestination());
         logger.info(
             'Rl2hju3NXI',
-            new Label('type1', 'HDr4z3mHPj'),
-            new Label('type1', 'MzeZyg2fr7'),
+            new Tags('type1', 'HDr4z3mHPj'),
+            new Tags('type1', 'MzeZyg2fr7'),
             new KV('key1', 'ha0v4A5ZRy'),
-            new KV('key2', new Label('type2', 'asvKktnPcA')),
+            new KV('key2', new Tags('type2', 'asvKktnPcA')),
             new KV('key1', 'ignored')
         );
 
@@ -297,9 +289,23 @@ describe('logger', () => {
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('Rl2hju3NXI');
         expect(entry.error).is.undefined;
-        expect(entry.data?.type1).is.eql(['HDr4z3mHPj', 'MzeZyg2fr7']);
-        expect(entry.data?.key1).is.eql('ha0v4A5ZRy');
-        expect(entry.data?.key2).is.eql({type2: ['asvKktnPcA']});
+        expect(entry.data).is.undefined;
+
+        expect(entry.loggables).is.eql([
+            new KV('key1', 'ignored'),
+            new KV('key2', new Tags('type2', 'asvKktnPcA')),
+            new KV('key1', 'ha0v4A5ZRy'),
+            new Tags('type1', 'MzeZyg2fr7'),
+            new Tags('type1', 'HDr4z3mHPj')
+        ]);
+
+        const {loggableJson, loggableValues} = mergeLoggableModels(...entry.loggables!);
+        expect(loggableJson).is.eql({
+            key1: 'ha0v4A5ZRy',
+            key2: { type2: ['asvKktnPcA'] },
+            type1: [ 'HDr4z3mHPj' ]
+        });
+        expect(loggableValues).is.eql([]);
     });
 
     it('Test Key Override', () => {
@@ -309,11 +315,18 @@ describe('logger', () => {
 
         expect(entryCollector.length).is.eql(1);
         const entry = entryCollector[0];
-
+        
         expect(entry.severity).is.eql('info');
         expect(entry.level).is.eql(200);
         expect(entry.message).is.eql('Test Override');
         expect(entry.error).is.undefined;
-        expect(entry.data?.key1).is.eql('640W1CcPTF');
+
+        expect(entry.data).is.eql({key1: 'y3uEs8NBxq'});
+        expect(entry.loggables).is.eql([kv]);
+
+        const data = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        expect(data).is.eql({
+            key1: '640W1CcPTF'
+        });
     });
 });
