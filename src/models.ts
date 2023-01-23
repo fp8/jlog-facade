@@ -4,8 +4,15 @@ import {
     convertValueToIJson, mergeIJson
 } from "./core";
 
-import {isObject} from './helper';
+import {isArray, isObject} from './helper';
 
+function appendToSet<T>(cummulator: Set<T>, input: T | T[]): void {
+    if (isArray(input)) {
+        input.forEach(entry => cummulator.add(entry));
+    } else {
+        cummulator.add(input);
+    }
+}
 
 /**
  * Merge a list of KVs into a IJson, optionally merging the values into an array of values.
@@ -26,22 +33,24 @@ function mergeKV(mergeValue: boolean, kvs: KV<TLoggableValue>[]): IJson {
     for (const kv of kvs) {
         const key = kv.key;
         const value = kv.value;
-
         /*
         Merge the value to a Set if mergeValue flag is set.  If flag is set to false,
         the repeated key instance is ignored.
         */
         if (mergeValue === true && key in result) {
-            if (key in merged) {
-                // Already exists in merged, just add to Set
-                merged[key].add(
-                    convertValueToIJson(value)
+            if (!(key in merged)) {
+                // Create a set if first time
+                merged[key] = new Set<TJsonValue | TJsonValue[]>();
+                appendToSet(merged[key], result[key]);
+            }
+
+            const converted = convertValueToIJson(value);
+            if (isArray(converted)) {
+                converted.forEach(
+                    convertedEntry => merged[key].add(convertedEntry)
                 );
             } else {
-                // First time
-                merged[key] = new Set<TJsonValue | TJsonValue[]>([
-                    convertValueToIJson(value)
-                ]);
+                merged[key].add(converted);
             }
         } else {
             result[key] = convertValueToIJson(value);
@@ -136,7 +145,7 @@ export class KV<T extends TLoggableValue> extends AbstractLoggable {
      * @returns 
      */
     public static mergeValue<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
-        return mergeKV(false, kvs)
+        return mergeKV(true, kvs)
     }
 
     constructor(public readonly key: string, public readonly value: T | T[]) {

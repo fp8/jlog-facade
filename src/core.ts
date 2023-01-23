@@ -115,7 +115,7 @@ export function convertValueToIJson(input: TLoggableValue | TLoggableValue[]): T
     } else {
         return convertValueToJsonValue(input);
     }
-} 
+}
 
 /**
  * Method used to merge 2 IJson object, from `input` into `cummulator`.
