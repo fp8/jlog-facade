@@ -1,4 +1,5 @@
-import { AbstractLogDestination, IJLogEntry, IJson } from "./core";
+import { AbstractLogDestination, AbstractLoggable, IJLogEntry, IJson, mergeIJson, TJsonValue } from "./core";
+import { mergeLoggableModels } from './models';
 import { isEmpty } from "./helper";
 
 export interface ISimpleJsonOutput extends IJson {
@@ -6,6 +7,48 @@ export interface ISimpleJsonOutput extends IJson {
     m: string; // 1 char severity + message
     e?: string; // error message
 }
+
+/**
+ * Merge extra attributes from JLogEntry (loggables, data and values) into a single Json.  In this case,
+ * the keys in loggables takes priority over those in data; ie, the key in loggable will always overwrite
+ * those in data.
+ * 
+ * @param loggables 
+ * @param data 
+ * @param values 
+ * @returns 
+ */
+export function buildOutputDataForDestination(loggables?: AbstractLoggable[], data?: IJson, values?: TJsonValue[]): IJson {
+    let output: IJson;
+    if (data === undefined) {
+        output = {};
+    } else {
+        output = Object.assign({}, data);
+    }
+
+    // Check if value exists
+    const outputValues: TJsonValue[] = [];
+    if (values !== undefined) {
+        outputValues.push(...values);
+    }
+
+    // Process loggables
+    if (loggables !== undefined) {
+        const {loggableJson, loggableValues} = mergeLoggableModels(...loggables);
+        mergeIJson(output, loggableJson);
+        if (!isEmpty(loggableValues)) {
+            outputValues.push(...loggableValues);
+        }
+    }
+
+    // Add values to the output
+    if (!isEmpty(outputValues)) {
+        output.values = outputValues;
+    }
+
+    return output;
+}
+
 
 /**
  * A minimalistic json based destination that will output json in the following sequence:
@@ -22,8 +65,7 @@ export class SimpleJsonDestination extends AbstractLogDestination {
     }
 
     protected formatOutput(entry: IJLogEntry): ISimpleJsonOutput {
-        // Create a clone of data
-        const data: IJson = Object.assign({}, entry.data);
+        const data = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
 
         let stack: string | undefined = undefined;
         if (this.logStackTrace && entry.error) {
@@ -67,9 +109,10 @@ export class SimpleTextDestination extends AbstractLogDestination {
         }
 
         // Create a clone of data
+        const merged = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
         let data = '';
-        if (!isEmpty(entry.data)) {
-            data = ` ${JSON.stringify(entry.data)}`;
+        if (!isEmpty(merged)) {
+            data = ` ${JSON.stringify(merged)}`;
         }
 
         return `${header} ${entry.message}${error}${data}`;

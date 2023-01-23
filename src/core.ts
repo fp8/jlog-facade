@@ -1,3 +1,6 @@
+// ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
+import {isArray} from './helper';
+
 /**
  * Allowed Json Value Type
  */
@@ -9,6 +12,11 @@ export type TJsonValue = string | number | boolean | IJson | null | undefined;
 export interface IJson {
     [key: string]: TJsonValue | TJsonValue[]
 }
+
+/**
+ * Type of value that can be written to logger
+ */
+export type TLoggableValue = TJsonValue | AbstractLoggable;
 
 /**
  * Supported log severity.
@@ -48,8 +56,12 @@ export interface IJLogEntry {
     message: string,
     /** error object */
     error?: Error,
+    /** all AbstractLoggables */
+    loggables?: AbstractLoggable[],
     /** additional attributes to log */
     data?: IJson,
+    /** any value logged */
+    values?: TJsonValue[],
     /** timestamp of the log */
     time: Date
 }
@@ -73,4 +85,49 @@ export abstract class AbstractLogDestination {
  */
 export abstract class AbstractAsyncLogDestination {
     abstract write(entry: IJLogEntry): Promise<void>;
+}
+
+/**
+ * Transform a loggable value into a TJsonValue
+ *
+ * @param input 
+ * @returns 
+ */
+function convertValueToJsonValue(input: TLoggableValue): TJsonValue {
+    if (input instanceof AbstractLoggable) {
+        return input.toIJson();
+    } else {
+        return input;
+    }
+}
+
+/**
+ * Transform a loggable value into a TJsonValue, handling case where input is an array
+ *
+ * @param input 
+ * @returns 
+ */
+export function convertValueToIJson(input: TLoggableValue | TLoggableValue[]): TJsonValue | TJsonValue[] {
+    if (isArray(input)) {
+        return input.map(
+            entry => convertValueToJsonValue(entry)
+        )
+    } else {
+        return convertValueToJsonValue(input);
+    }
+}
+
+/**
+ * Method used to merge 2 IJson object, from `input` into `cummulator`.
+ *
+ * @param input source IJson
+ * @param cummulator destination IJson
+ */
+export function mergeIJson(cummulator: IJson, ...values: IJson[]) {
+    // Merge incoming IJson into data
+    for (const entry of values) {
+        for (const [key, value] of Object.entries(entry)) {
+            cummulator[key] = value;
+        }
+    }
 }
