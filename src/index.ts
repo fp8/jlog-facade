@@ -64,7 +64,7 @@ export class LoggerFactory {
 }
 
 export {
-    TJsonValue, IJson, IJLogEntry,
+    TJsonValue, TLoggableValue, IJson, IJLogEntry,
     LogSeverity, LogLevel,
     AbstractLoggable,
     AbstractLogDestination, AbstractAsyncLogDestination

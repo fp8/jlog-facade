@@ -18,7 +18,7 @@ logger.info(`Process started at port $PORT`);
 logger.error('Failed to processing incoming request', err);
 ```
 
-### Install
+### Install
 
 ```
 npm i jlog-facade

@@ -17,7 +17,7 @@ function appendToSet<T>(cummulator: Set<T>, input: T | T[]): void {
 /**
  * Merge a list of KVs into a IJson, optionally merging the values into an array of values.
  * 
- * If mergeValue is FALSE, the first key in the list prevail
+ * If mergeValue is FALSE, the last key in the list prevail
  *
  * @param mergeValue 
  * @param kvs 
