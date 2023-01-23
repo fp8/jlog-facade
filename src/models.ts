@@ -4,7 +4,7 @@ import {
     convertValueToIJson, mergeIJson
 } from "./core";
 
-import {isEmpty, isObject} from './helper';
+import {isObject} from './helper';
 
 
 /**
@@ -21,6 +21,8 @@ function mergeKV(mergeValue: boolean, kvs: KV<TLoggableValue>[]): IJson {
     const merged: { [key: string]: Set<TJsonValue | TJsonValue[]>} = {};
 
     // Ensure that no dup key exists
+    // NB.: as the input comes from result of JLogger.extractData, the entries in the list are already
+    // in the reverse order from the caller's perspective.  Must not reverse the order of kvs again here.
     for (const kv of kvs) {
         const key = kv.key;
         const value = kv.value;

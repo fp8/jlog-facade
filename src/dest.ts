@@ -8,6 +8,16 @@ export interface ISimpleJsonOutput extends IJson {
     e?: string; // error message
 }
 
+/**
+ * Merge extra attributes from JLogEntry (loggables, data and values) into a single Json.  In this case,
+ * the keys in loggables takes priority over those in data; ie, the key in loggable will always overwrite
+ * those in data.
+ * 
+ * @param loggables 
+ * @param data 
+ * @param values 
+ * @returns 
+ */
 export function buildOutputDataForDestination(loggables?: AbstractLoggable[], data?: IJson, values?: TJsonValue[]): IJson {
     let output: IJson;
     if (data === undefined) {
