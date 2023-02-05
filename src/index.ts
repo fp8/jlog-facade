@@ -37,6 +37,16 @@ export class LoggerFactory {
     }
 
     /**
+     * Create a synonymous for .create
+     *
+     * @param name 
+     * @returns 
+     */
+    public static getLogger(name: string): JLogger {
+        return LoggerFactory.create(name);
+    }
+
+    /**
      * Add a destination to output the log
      *
      * @param destination 
