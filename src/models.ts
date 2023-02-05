@@ -230,7 +230,7 @@ export class Label extends KV<string> {
     }
 
     constructor(key: string, ...values: T[]) {
-        super(key, '');
+        super(key, null as T);
         this._value = values;
     }
 }
