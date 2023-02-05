@@ -18,7 +18,7 @@ describe('models', () => {
     });
 
     it('simple Label', () => {
-        const entry = new Label('testLabel', 'bKutvGvLoa');
+        const entry = Label.of('testLabel', 'bKutvGvLoa');
         expect(entry.toIJson()).to.eql({testLabel: 'bKutvGvLoa'})
     });
 
@@ -26,12 +26,12 @@ describe('models', () => {
         const entry = new SimpleTags('testTags', '80qes03Ftr');
         expect(entry.toIJson()).to.eql({testTags: ['80qes03Ftr']})
 
-        const entry2 = new SimpleTags('testTags2', 'WL5oW2Vhll', 'WL5oW2Vhll');
+        const entry2 = SimpleTags.of('testTags2', 'WL5oW2Vhll', 'WL5oW2Vhll');
         expect(entry2.toIJson()).to.eql({testTags2: ['WL5oW2Vhll', 'WL5oW2Vhll']})
     });
 
     it('simple KVLabel', () => {
-        const entry = new KVLabel('testKVLabel', new Tags('testLabel', 8090, 6860));
+        const entry = new KVLabel('testKVLabel', Tags.of('testLabel', 8090, 6860));
         expect(entry.toIJson()).to.eql({ testKVLabel: {testLabel: [8090, 6860]} });
     });
 
@@ -71,9 +71,9 @@ describe('models', () => {
 
     it('merge kvs merge value', () => {
         const kvs = [
-            new KVS('key1', '0iu7dUwEE6'),
-            new Label('key2', 'xV49Qdk17g'),
-            new SimpleTags('key1', 'WDlBAwENwK')
+            KVS.of('key1', '0iu7dUwEE6'),
+            Label.of('key2', 'xV49Qdk17g'),
+            SimpleTags.of('key1', 'WDlBAwENwK')
         ];
 
         const merged = KV.mergeValue(...kvs);

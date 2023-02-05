@@ -124,6 +124,20 @@ export function mergeLoggableModels<T extends TLoggableValue>(...loggables: Abst
  * value assigned to the same key
  */
 export class KV<T extends TLoggableValue> extends AbstractLoggable {
+    protected _key: string;
+    protected _value: T | T[];
+
+    /**
+     * Factory method for KV
+     *
+     * @param key 
+     * @param value 
+     * @returns 
+     */
+    public static of<T extends TLoggableValue>(key: string, value: T): KV<T> {
+        return new KV(key, value);
+    }
+
     /**
      * Merge list of KVs and skip duplicate key if found later in the list
      *
@@ -148,8 +162,18 @@ export class KV<T extends TLoggableValue> extends AbstractLoggable {
         return mergeKV(true, kvs)
     }
 
-    constructor(public readonly key: string, public readonly value: T | T[]) {
+    constructor(key: string, value: T) {
         super();
+        this._key = key;
+        this._value = value;
+    }
+
+    public get key(): string {
+        return this._key;
+    }
+
+    public get value(): T | T[] {
+        return this._value;
     }
 
     /**
@@ -162,12 +186,25 @@ export class KV<T extends TLoggableValue> extends AbstractLoggable {
             [this.key]: convertValueToIJson(this.value)
         };
     }
+
+
 }
 
 /**
  * A single key value pair where value is always string
  */
-export class Label extends KV<string> {}
+export class Label extends KV<string> {
+    override _value: string;
+
+    override get value(): string {
+        return this._value;
+    }
+
+    constructor(key: string, value: string) {
+        super(key, value);
+        this._value = value;
+    }
+}
 
 /**
  * Allow adding of a key/value pair to a log where resulting value
@@ -175,11 +212,26 @@ export class Label extends KV<string> {}
  * are merged.
  */
  export class Tags<T extends TLoggableValue> extends KV<T> {
-    override value: T[];
+    override _value: T[];
+
+    /**
+     * Factory method for KV
+     *
+     * @param key 
+     * @param value 
+     * @returns 
+     */
+    static override of<T extends TLoggableValue>(key: string, ...values: T[]): Tags<T> {
+        return new Tags(key, ...values);
+    }
+
+    override get value(): T[] {
+        return this._value;
+    }
 
     constructor(key: string, ...values: T[]) {
-        super(key, values);
-        this.value = values;
+        super(key, '');
+        this._value = values;
     }
 }
 
