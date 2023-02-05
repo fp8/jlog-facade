@@ -23,7 +23,7 @@ function appendToSet<T>(cummulator: Set<T>, input: T | T[]): void {
  * @param kvs 
  * @returns 
  */
-function mergeKV(mergeValue: boolean, kvs: KV<TLoggableValue>[]): IJson {
+function mergeKV(mergeValue: boolean, kvs: AbstractKeyValue<TLoggableValue>[]): IJson {
     const result: { [key: string]: TJsonValue | TJsonValue[]} = {};
     const merged: { [key: string]: Set<TJsonValue | TJsonValue[]>} = {};
 
@@ -93,12 +93,12 @@ export function mergeLoggableModels<T extends TLoggableValue>(...loggables: Abst
     loggableValues: TJsonValue[]
 } {
     const json: IJson[] = [];
-    const kvs: KV<T>[] = [];
+    const kvs: AbstractKeyValue<T>[] = [];
     const loggableValues: TJsonValue[] = [];
 
     // Break the input list into different type of container
     for (const loggable of loggables) {
-        if (loggable instanceof KV) {
+        if (loggable instanceof AbstractKeyValue) {
             kvs.push(loggable);
         } else if (loggable instanceof AbstractLoggable) {
             json.push(loggable.toIJson())
@@ -119,48 +119,11 @@ export function mergeLoggableModels<T extends TLoggableValue>(...loggables: Abst
 }
 
 /**
- * Allow adding of a simple key/value pair to a log.  When multiple
- * key is detected, the first key logged prevails over subsequent
- * value assigned to the same key
+ * Abstract class serving foundation for Key Value loggables
  */
-export class KV<T extends TLoggableValue> extends AbstractLoggable {
+export abstract class AbstractKeyValue<T extends TLoggableValue> extends AbstractLoggable {
     protected _key: string;
     protected _value: T | T[];
-
-    /**
-     * Factory method for KV
-     *
-     * @param key 
-     * @param value 
-     * @returns 
-     */
-    public static of<T extends TLoggableValue>(key: string, value: T): KV<T> {
-        return new KV(key, value);
-    }
-
-    /**
-     * Merge list of KVs and skip duplicate key if found later in the list
-     *
-     * @param kvs 
-     * @returns 
-     */
-    public static merge<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
-        return mergeKV(false, kvs)
-    }
-
-    /**
-     * Merge list of KVs if duplicate keys found, convert the value into an array.
-     * 
-     * **N.B.:** Use this method with caution as downstream system such as logstash
-     * does not like when datatype of a key changes.  It could result in the log
-     * being missed.
-     * 
-     * @param kvs 
-     * @returns 
-     */
-    public static mergeValue<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
-        return mergeKV(true, kvs)
-    }
 
     constructor(key: string, value: T) {
         super();
@@ -191,10 +154,90 @@ export class KV<T extends TLoggableValue> extends AbstractLoggable {
 }
 
 /**
+ * Allow adding of a simple key/value pair to a log.  When multiple
+ * key is detected, the first key logged prevails over subsequent
+ * value assigned to the same key
+ */
+export class KV<T extends TLoggableValue> extends AbstractKeyValue<T> {
+    protected override _value: T;
+
+    /**
+     * Factory method for KV
+     *
+     * @param key 
+     * @param value 
+     * @returns 
+     */
+    public static of<T extends TLoggableValue>(key: string, value: T): KV<T> {
+        return new KV(key, value);
+    }
+
+    /**
+     * Merge list of KVs and skip duplicate key if found later in the list
+     *
+     * @param kvs 
+     * @returns 
+     */
+    public static merge<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
+        return mergeKV(false, kvs);
+    }
+
+    /**
+     * Merge list of KVs if duplicate keys found, convert the value into an array.
+     * 
+     * **N.B.:** Use this method with caution as downstream system such as logstash
+     * does not like when datatype of a key changes.  It could result in the log
+     * being missed.
+     * 
+     * @param kvs 
+     * @returns 
+     */
+    public static mergeValue<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
+        return mergeKV(true, kvs)
+    }
+
+    constructor(key: string, value: T) {
+        super(key, value);
+        this._key = key;
+        this._value = value;
+    }
+
+    public get key(): string {
+        return this._key;
+    }
+
+    public get value(): T | T[] {
+        return this._value;
+    }
+
+    /**
+     * Convert KV into a JSON
+     *
+     * @returns 
+     */
+    toIJson(): IJson {
+        return {
+            [this.key]: convertValueToIJson(this.value)
+        };
+    }
+}
+
+/**
  * A single key value pair where value is always string
  */
-export class Label extends KV<string> {
+export class Label extends AbstractKeyValue<string> {
     override _value: string;
+
+    /**
+     * Factory method for Label
+     *
+     * @param key 
+     * @param value 
+     * @returns 
+     */
+    public static of(key: string, value: string): Label {
+        return new Label(key, value);
+    }
 
     override get value(): string {
         return this._value;
@@ -211,17 +254,17 @@ export class Label extends KV<string> {
  * is always a list.  When multiple key is detected, the values
  * are merged.
  */
- export class Tags<T extends TLoggableValue> extends KV<T> {
+ export class Tags<T extends TLoggableValue> extends AbstractKeyValue<T> {
     override _value: T[];
 
     /**
-     * Factory method for KV
+     * Factory method for Tags
      *
      * @param key 
      * @param value 
      * @returns 
      */
-    static override of<T extends TLoggableValue>(key: string, ...values: T[]): Tags<T> {
+    public static of<T extends TLoggableValue>(key: string, ...values: T[]): Tags<T> {
         return new Tags(key, ...values);
     }
 
