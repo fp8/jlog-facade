@@ -32,9 +32,7 @@ class TestSimpleJsonDestination extends SimpleJsonDestination {
     }
 }
 
-
-
-describe.only('dest', () => {
+describe('dest', () => {
     const logger = LoggerFactory.create('my-logger');
 
     beforeEach(() => {
@@ -102,7 +100,7 @@ describe.only('dest', () => {
 
     it('json - LogLevel INFO', () => {
         LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.WARNING));
-        
+
         logger.debug('Debug message for bCp3NvdMko');
         expect(logCollector).is.eql([]);
         logger.info('Info message for bCp3NvdMko');

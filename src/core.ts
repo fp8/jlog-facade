@@ -1,5 +1,9 @@
 // ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
-import {isArray} from './helper';
+import * as fs from 'fs';
+import * as nodePath from 'path';
+import {isArray, localError, localDebug, isObject} from './helper';
+
+
 
 /**
  * Allowed Json Value Type
@@ -26,7 +30,8 @@ export enum LogSeverity {
     INFO = 'info',
     WARNING = 'warn',
     ERROR = 'error',
-    PANIC = 'panic'
+    PANIC = 'panic',
+    OFF = 'off'
 }
 
 /**
@@ -38,7 +43,96 @@ export enum LogLevel {
     INFO = 200,
     WARNING = 400,
     ERROR = 500,
-    PANIC = 800
+    PANIC = 800,
+    OFF = 999_999
+}
+
+/**
+ * Translate LogSeverity to LogLevel.  Severity is case insensitive
+ * 
+ * @param input 
+ * @returns 
+ */
+export function convertSeverityToLevel(input?: string | LogSeverity): LogLevel | undefined {
+    switch(input?.toLowerCase()) {
+        case LogSeverity.DEBUG:
+        case 'debug':
+            return LogLevel.DEBUG;
+
+        case LogSeverity.INFO:
+        case 'info':
+            return LogLevel.INFO;
+        
+        case LogSeverity.WARNING:
+        case 'warning':
+        case 'warn':
+            return LogLevel.WARNING;
+        
+        case LogSeverity.ERROR:
+        case 'error':
+            return LogLevel.ERROR;
+
+        case LogSeverity.PANIC:
+        case 'panic':
+            return LogLevel.PANIC;
+
+        case LogSeverity.OFF:
+        case 'off':
+            return LogLevel.OFF;
+        default:
+            return undefined;
+    }
+}
+
+type TLoggerConfigOverride = {[loggerName: string]: LogLevel};
+
+/**
+ * Expected output from logger.json file
+ */
+export class LoggerConfig {
+    level: LogLevel;
+    override: TLoggerConfigOverride;
+
+    private parseLevel(configSeverity: TJsonValue | TJsonValue[]): LogLevel {
+        let level = LogLevel.INFO; 
+
+        // Extract .severity
+        if (typeof configSeverity === 'string') {
+            const configLevel = convertSeverityToLevel(configSeverity);
+            if (configLevel !== undefined) {
+                level = configLevel;
+            }
+        }
+
+        return level;
+    }
+
+    private parseOverride(configFilters: TJsonValue | TJsonValue[]): TLoggerConfigOverride {
+        const filters: TLoggerConfigOverride = {};
+
+        // Extract .severity
+        if (isObject(configFilters)) {
+            for (const [loggerName, severity] of Object.entries(configFilters)) {
+                if (typeof severity === 'string') {
+                    const level = convertSeverityToLevel(severity);
+                    if (level !== undefined) {
+                        filters[loggerName] = level;
+                    } else {
+                        localDebug(`parseOverride failed to translate severity of ${severity}.  Skipped override of ${loggerName} loggerName`);
+                    }
+                } else {
+                    localDebug(`parseOverride received a non-string severity of ${severity}.  Skipped override of ${loggerName} loggerName`);
+                }
+            }
+        }
+
+        return filters;
+    }
+
+    constructor(input: IJson, public readonly configDir?: string) {
+        this.level = this.parseLevel(input.severity);
+        this.override = this.parseOverride(input.override);
+    }
 }
 
 /**
@@ -161,4 +255,56 @@ export function mergeIJson(cummulator: IJson, ...values: IJson[]) {
             cummulator[key] = value;
         }
     }
+}
+
+export function loadJsonFile(filepath: string): IJson | undefined {
+    if (!filepath.endsWith('.json')) {
+        localDebug(`loadJsonFile not loading ${filepath} as it doesn't end with .json`);
+        return undefined;
+    }
+
+    let loaded: IJson;
+    try {
+        const content = fs.readFileSync(filepath, {encoding: 'utf8'});
+        localDebug(`Config from logger.json: ${content}`);
+        loaded = JSON.parse(content);
+    } catch(e) {
+        localError(`Failed to load json file ${filepath}`, e as Error);
+        return undefined;
+    }
+
+    return loaded;
+}
+
+/**
+ * 
+ * @returns 
+ */
+export function readLoggerConfig(env?: string): LoggerConfig {
+    // Set paths to find the logger.json file
+    const fp8env = env ?? process.env.FP8_ENV ?? 'local';
+    const paths = [
+        `./etc/${fp8env}/logger.json`,
+        './etc/logger.json',
+        `./config/${fp8env}/logger.json`,
+        './config/logger.json'
+    ];
+
+    // Return first config found from configured paths
+    let configDir: string | undefined;
+    let config: IJson = {};
+    for (const path of paths) {
+        localDebug(`Looking for logger.json at ${path}`);
+        if (fs.existsSync(path)) {
+            const jsonFile = loadJsonFile(path);
+            if (jsonFile !== undefined) {
+                config = jsonFile;
+                configDir = nodePath.dirname(path);
+                break;
+            }
+        }
+    }
+
+    // Return 
+    return new LoggerConfig(config, configDir);
 }

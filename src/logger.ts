@@ -1,6 +1,6 @@
 import {
     TJsonValue, IJson,
-    LogSeverity, LogLevel,
+    LogSeverity, LogLevel, convertSeverityToLevel,
     IJLogEntry, AbstractLoggable,
     mergeIJson
 } from './core';
@@ -28,25 +28,13 @@ export class JLogger {
     constructor(private name: string) {}
 
     /**
-     * Function to convert severity string to a level number
+     * Function to convert severity string to a level number.  Default to INFO.
+     * 
      * @param severity 
      * @returns 
      */
     private logSeverityToLevel(severity: string | LogSeverity): LogLevel {
-        switch (severity) {
-            case LogSeverity.DEBUG:
-                return LogLevel.DEBUG;
-            case LogSeverity.INFO:
-                return LogLevel.INFO;
-            case LogSeverity.WARNING:
-                return LogLevel.WARNING;
-            case LogSeverity.ERROR:
-                return LogLevel.ERROR;
-            case LogSeverity.PANIC:
-                return LogLevel.PANIC;
-            default:
-                return LogLevel.INFO;
-        }
+        return convertSeverityToLevel(severity) ?? LogLevel.INFO;
     }
 
 

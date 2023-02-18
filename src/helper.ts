@@ -3,7 +3,7 @@
 /**
  * A simple delay function 
  */
- export async function delay(milliseconds: number): Promise<void> {
+export async function delay(milliseconds: number): Promise<void> {
     return new Promise((resolve, _) => {
         setTimeout(resolve, milliseconds);
     });
@@ -48,7 +48,7 @@ export function isObject(input: unknown): input is Record<string, unknown> {
  * 
  * ref: https://stackoverflow.com/a/59787784/2355087
  */
-export function isEmpty(input: unknown): boolean  {
+export function isEmpty(input: unknown): boolean {
     if (isNullOrUndefined(input)) {
         return true;
     }
@@ -69,21 +69,22 @@ export function isEmpty(input: unknown): boolean  {
 /**
  * A local error output
  */
- const SHOW_ERROR_MESSAGE = true; // set to false to omit any local errors
- export function localError(message: string, error?: Error): void {
-     if (SHOW_ERROR_MESSAGE) {
-         console.error(`[E] ${message}`);
-         if (error) {
-             console.error(error);
-         }
-     }
- }
- 
- /**
-  * A local debug output
-  */
- export function localDebug(message: string): void {
-     if (process.env.DEBUG) {
-         console.debug(`[D] ${message}`);
-     }
- }
+const SHOW_ERROR_MESSAGE = true; // set to false to omit any local errors
+export function localError(message: string, error?: Error): void {
+    if (SHOW_ERROR_MESSAGE) {
+        if (error) {
+            console.error(`[jlog-facade ERROR] ${message}`, error);
+        } else {
+            console.error(`[jlog-facade ERROR] ${message}`);
+        }
+    }
+}
+
+/**
+ * A local debug output
+ */
+export function localDebug(message: string): void {
+    if (process.env.DEBUG) {
+        console.debug(`[D] ${message}`);
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "severity": "info",
+    "override": {
+        "my-logger": "debug"
+    }
+}

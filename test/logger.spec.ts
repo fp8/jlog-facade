@@ -4,7 +4,7 @@ import { Writable } from 'stream';
 import {
     IJLogEntry, LoggerFactory,
     AbstractLogDestination, AbstractAsyncLogDestination,
-    KV, Tags, mergeLoggableModels, buildOutputDataForDestination, AbstractLoggable
+    KV, Tags, mergeLoggableModels, buildOutputDataForDestination, AbstractLoggable, LogLevel
 } from '@fp8proj';
 import {LogWriter} from '@fp8proj/writer';
 
@@ -23,14 +23,14 @@ function addToLogCollector(source: string, entry: IJLogEntry) {
 }
 
 class TestDestination extends AbstractLogDestination {
-    write(entry: IJLogEntry): void {
+    override _write(entry: IJLogEntry): void {
         addToLogCollector('SYNC', entry);
         console.log('TestDestination: ', JSON.stringify(entry));
     }
 }
 
 class TestAsyncDestination extends AbstractAsyncLogDestination {
-    async write(entry: IJLogEntry): Promise<void> {
+    override async _write(entry: IJLogEntry): Promise<void> {
         return new Promise((resolve, _) => {
             setTimeout(() => {
                 addToLogCollector('ASYNC', entry);
@@ -86,7 +86,7 @@ describe('logger', () => {
     });
 
     it('debug log', () => {
-        dest.addDestination(new TestDestination());
+        dest.addDestination(new TestDestination(LogLevel.DEBUG));
         logger.debug('FAySD0HVfS');
         expect(logCollector).to.eql(['SYNC-debug: FAySD0HVfS']);
     });

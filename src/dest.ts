@@ -1,6 +1,11 @@
-import { AbstractLogDestination, AbstractLoggable, IJLogEntry, IJson, LogLevel, mergeIJson, TJsonValue } from "./core";
+import {
+    AbstractLogDestination, AbstractLoggable, IJLogEntry,
+    IJson, LogLevel, mergeIJson, TJsonValue,
+    LoggerConfig
+} from "./core";
 import { mergeLoggableModels } from './models';
 import { isEmpty } from "./helper";
+import { LoggerFactory } from "./factory";
 
 export interface ISimpleJsonOutput extends IJson {
     t: string; // time
@@ -60,6 +65,10 @@ export function buildOutputDataForDestination(loggables?: AbstractLoggable[], da
  * - other payload sent to the logger
  */
 export class SimpleJsonDestination extends AbstractLogDestination {
+    public static use(level?: LogLevel, ...filter: string[]): void {
+
+    }
+
     constructor(level?: LogLevel, private logStackTrace = true) {
         super(level);
     }
