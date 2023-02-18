@@ -73,18 +73,49 @@ export abstract class AbstractLoggable {
     abstract toIJson(): IJson
 }
 
+
+export abstract class AbstractBaseDestination {
+    protected _level: LogLevel;
+    protected _logNameFilter: string[] = [];
+
+    constructor(level?: LogLevel) {
+        this._level = level ?? LogLevel.INFO;
+    }
+
+    public setLoggerNameFilter(...filter: string[]): void {
+        this._logNameFilter = filter;
+    }
+
+    protected _writeNeeded(entry: IJLogEntry): boolean {
+        return entry.level >= this._level;
+    }
+}
+
+
 /**
  * A log destination that will write to output synchronously
  */
-export abstract class AbstractLogDestination {
-    abstract write(entry: IJLogEntry): void;
+export abstract class AbstractLogDestination extends AbstractBaseDestination {
+    abstract _write(entry: IJLogEntry): void;
+
+    write(entry: IJLogEntry): void {
+        if (this._writeNeeded(entry)) {
+            this._write(entry);
+        }
+    }
 }
 
 /**
  * A log destination that will write to output asynchronously
  */
-export abstract class AbstractAsyncLogDestination {
-    abstract write(entry: IJLogEntry): Promise<void>;
+export abstract class AbstractAsyncLogDestination extends AbstractBaseDestination {
+    abstract _write(entry: IJLogEntry): Promise<void>;
+
+    async write(entry: IJLogEntry): Promise<void> {
+        if (this._writeNeeded(entry)) {
+            await this._write(entry);
+        }
+    }
 }
 
 /**

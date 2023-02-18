@@ -1,4 +1,4 @@
-import { AbstractLogDestination, AbstractLoggable, IJLogEntry, IJson, mergeIJson, TJsonValue } from "./core";
+import { AbstractLogDestination, AbstractLoggable, IJLogEntry, IJson, LogLevel, mergeIJson, TJsonValue } from "./core";
 import { mergeLoggableModels } from './models';
 import { isEmpty } from "./helper";
 
@@ -60,8 +60,8 @@ export function buildOutputDataForDestination(loggables?: AbstractLoggable[], da
  * - other payload sent to the logger
  */
 export class SimpleJsonDestination extends AbstractLogDestination {
-    constructor(private logStackTrace = true) {
-        super();
+    constructor(level?: LogLevel, private logStackTrace = true) {
+        super(level);
     }
 
     protected formatOutput(entry: IJLogEntry): ISimpleJsonOutput {
@@ -81,7 +81,7 @@ export class SimpleJsonDestination extends AbstractLogDestination {
         };
     }
 
-    override write(entry: IJLogEntry): void {
+    override _write(entry: IJLogEntry): void {
         console.log(
             JSON.stringify(this.formatOutput(entry))
         );
@@ -118,7 +118,7 @@ export class SimpleTextDestination extends AbstractLogDestination {
         return `${header} ${entry.message}${error}${data}`;
     }
 
-    override write(entry: IJLogEntry): void {
+    override _write(entry: IJLogEntry): void {
         console.log(this.formatOutput(entry));
     }
 }

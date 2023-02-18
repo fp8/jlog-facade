@@ -1,12 +1,12 @@
 import {
     IJLogEntry, KV, LoggerFactory,
-    ISimpleJsonOutput, SimpleTextDestination, SimpleJsonDestination
+    ISimpleJsonOutput, SimpleTextDestination, SimpleJsonDestination, LogLevel
 } from "@fp8proj";
 import { expect } from "chai";
 
 let logCollector: string[] = [];
 class TestSimpleTextDestination extends SimpleTextDestination {
-    override write(entry: IJLogEntry): void {
+    override _write(entry: IJLogEntry): void {
         const result = this.formatOutput(entry);
         console.log(result);
 
@@ -21,7 +21,7 @@ class TestSimpleTextDestination extends SimpleTextDestination {
 }
 
 class TestSimpleJsonDestination extends SimpleJsonDestination {
-    override write(entry: IJLogEntry): void {
+    override _write(entry: IJLogEntry): void {
         const result = this.formatOutput(entry);
         console.log(JSON.stringify(result));
 
@@ -34,7 +34,7 @@ class TestSimpleJsonDestination extends SimpleJsonDestination {
 
 
 
-describe('dest', () => {
+describe.only('dest', () => {
     const logger = LoggerFactory.create('my-logger');
 
     beforeEach(() => {
@@ -69,7 +69,7 @@ describe('dest', () => {
     });
 
     it('json - simple debug', () => {
-        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.DEBUG));
         logger.debug('Debug message for VnFdNvbyTq');
         expect(logCollector).is.eql(['{"m":"D|Debug message for VnFdNvbyTq"}']);
     });
@@ -81,7 +81,7 @@ describe('dest', () => {
     });
 
     it('json - error', () => {
-        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(false));
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.INFO, false));
         const error = new Error('vOGQbtxvfD');
         logger.error(error);
         expect(logCollector).is.eql(['{"m":"E|vOGQbtxvfD","e":"Error: vOGQbtxvfD"}']);
@@ -98,6 +98,50 @@ describe('dest', () => {
         expect(json.m).is.eql('W|qbsKviHUSV did not work');
         expect(json.e).is.eql('Error: qbsKviHUSV');
         expect(json.s).satisfies((message: string) => message.startsWith('Error: qbsKviHUSV'));
+    });
+
+    it('json - LogLevel INFO', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.WARNING));
+        
+        logger.debug('Debug message for bCp3NvdMko');
+        expect(logCollector).is.eql([]);
+        logger.info('Info message for bCp3NvdMko');
+        expect(logCollector).is.eql([]);
+        
+        logger.warn('Warn message for bCp3NvdMko');
+        expect(logCollector).is.eql(['{"m":"W|Warn message for bCp3NvdMko"}']);
+
+        logger.error('Error message for bCp3NvdMko');
+        expect(logCollector).is.eql([
+            '{"m":"W|Warn message for bCp3NvdMko"}',
+            '{"m":"E|Error message for bCp3NvdMko"}'
+        ]);
+
+        logger.panic('Panic message for bCp3NvdMko');
+        expect(logCollector).is.eql([
+            '{"m":"W|Warn message for bCp3NvdMko"}',
+            '{"m":"E|Error message for bCp3NvdMko"}',
+            '{"m":"P|Panic message for bCp3NvdMko"}'
+        ]);
+
+    });
+
+    it('json - LogLevel PANIC', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.PANIC));
+
+        logger.debug('Debug message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+        logger.info('Info message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+        logger.warn('Warn message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+        logger.error('Error message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+
+        logger.panic('Panic message for fYKShPyBvI');
+        expect(logCollector).is.eql([
+            '{"m":"P|Panic message for fYKShPyBvI"}'
+        ]);
     });
 
 });
