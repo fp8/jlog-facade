@@ -1,7 +1,6 @@
 // ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
 import * as fs from 'fs';
-import * as nodePath from 'path';
-import {isArray, localError, localDebug, isObject} from './helper';
+import {isArray, localError, localDebug} from './helper';
 
 
 
@@ -48,12 +47,19 @@ export enum LogLevel {
 }
 
 /**
+ * The default log level if level or severity is not provided.
+ */
+export const DEFAULT_LOG_LEVEL = LogLevel.INFO;
+
+/**
  * Translate LogSeverity to LogLevel.  Severity is case insensitive
  * 
  * @param input 
  * @returns 
  */
 export function convertSeverityToLevel(input?: string | LogSeverity): LogLevel | undefined {
+    // NOTE: this function cannot be in helper as it has dependency from core.ts
+
     switch(input?.toLowerCase()) {
         case LogSeverity.DEBUG:
         case 'debug':
@@ -81,57 +87,6 @@ export function convertSeverityToLevel(input?: string | LogSeverity): LogLevel |
             return LogLevel.OFF;
         default:
             return undefined;
-    }
-}
-
-type TLoggerConfigOverride = {[loggerName: string]: LogLevel};
-
-/**
- * Expected output from logger.json file
- */
-export class LoggerConfig {
-    level: LogLevel;
-    override: TLoggerConfigOverride;
-
-    private parseLevel(configSeverity: TJsonValue | TJsonValue[]): LogLevel {
-        let level = LogLevel.INFO; 
-
-        // Extract .severity
-        if (typeof configSeverity === 'string') {
-            const configLevel = convertSeverityToLevel(configSeverity);
-            if (configLevel !== undefined) {
-                level = configLevel;
-            }
-        }
-
-        return level;
-    }
-
-    private parseOverride(configFilters: TJsonValue | TJsonValue[]): TLoggerConfigOverride {
-        const filters: TLoggerConfigOverride = {};
-
-        // Extract .severity
-        if (isObject(configFilters)) {
-            for (const [loggerName, severity] of Object.entries(configFilters)) {
-                if (typeof severity === 'string') {
-                    const level = convertSeverityToLevel(severity);
-                    if (level !== undefined) {
-                        filters[loggerName] = level;
-                    } else {
-                        localDebug(`parseOverride failed to translate severity of ${severity}.  Skipped override of ${loggerName} loggerName`);
-                    }
-                } else {
-                    localDebug(`parseOverride received a non-string severity of ${severity}.  Skipped override of ${loggerName} loggerName`);
-                }
-            }
-        }
-
-        return filters;
-    }
-
-    constructor(input: IJson, public readonly configDir?: string) {
-        this.level = this.parseLevel(input.severity);
-        this.override = this.parseOverride(input.override);
     }
 }
 
@@ -167,49 +122,43 @@ export abstract class AbstractLoggable {
     abstract toIJson(): IJson
 }
 
-
 export abstract class AbstractBaseDestination {
-    protected _level: LogLevel;
-    protected _logNameFilter: string[] = [];
+    // abstract DESTINATION_NAME: string;
+    protected _logNameFilter: string[] | undefined;
 
-    constructor(level?: LogLevel) {
-        this._level = level ?? LogLevel.INFO;
+    constructor(public readonly level?: LogLevel) {}
+
+    public appendLoggerNameFilter(...filters: string[]): void {
+        if (filters.length) {
+            if (this._logNameFilter === undefined) {
+                this._logNameFilter = filters;
+            } else {
+                this._logNameFilter.push(...filters);
+            }
+        }
     }
 
-    public setLoggerNameFilter(...filter: string[]): void {
-        this._logNameFilter = filter;
+    public get filters(): string[] | undefined {
+        return this._logNameFilter;
     }
 
-    protected _writeNeeded(entry: IJLogEntry): boolean {
-        return entry.level >= this._level;
+    public clearLoggerNameFilter(): void {
+        this._logNameFilter = undefined;
     }
 }
-
 
 /**
  * A log destination that will write to output synchronously
  */
 export abstract class AbstractLogDestination extends AbstractBaseDestination {
-    abstract _write(entry: IJLogEntry): void;
-
-    write(entry: IJLogEntry): void {
-        if (this._writeNeeded(entry)) {
-            this._write(entry);
-        }
-    }
+    abstract write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): void;
 }
 
 /**
  * A log destination that will write to output asynchronously
  */
 export abstract class AbstractAsyncLogDestination extends AbstractBaseDestination {
-    abstract _write(entry: IJLogEntry): Promise<void>;
-
-    async write(entry: IJLogEntry): Promise<void> {
-        if (this._writeNeeded(entry)) {
-            await this._write(entry);
-        }
-    }
+    abstract write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): Promise<void>;
 }
 
 /**
@@ -248,7 +197,7 @@ export function convertValueToIJson(input: TLoggableValue | TLoggableValue[]): T
  * @param input source IJson
  * @param cummulator destination IJson
  */
-export function mergeIJson(cummulator: IJson, ...values: IJson[]) {
+export function mergeIJson(cummulator: IJson, ...values: IJson[]): void {
     // Merge incoming IJson into data
     for (const entry of values) {
         for (const [key, value] of Object.entries(entry)) {
@@ -274,37 +223,4 @@ export function loadJsonFile(filepath: string): IJson | undefined {
     }
 
     return loaded;
-}
-
-/**
- * 
- * @returns 
- */
-export function readLoggerConfig(env?: string): LoggerConfig {
-    // Set paths to find the logger.json file
-    const fp8env = env ?? process.env.FP8_ENV ?? 'local';
-    const paths = [
-        `./etc/${fp8env}/logger.json`,
-        './etc/logger.json',
-        `./config/${fp8env}/logger.json`,
-        './config/logger.json'
-    ];
-
-    // Return first config found from configured paths
-    let configDir: string | undefined;
-    let config: IJson = {};
-    for (const path of paths) {
-        localDebug(`Looking for logger.json at ${path}`);
-        if (fs.existsSync(path)) {
-            const jsonFile = loadJsonFile(path);
-            if (jsonFile !== undefined) {
-                config = jsonFile;
-                configDir = nodePath.dirname(path);
-                break;
-            }
-        }
-    }
-
-    // Return 
-    return new LoggerConfig(config, configDir);
 }

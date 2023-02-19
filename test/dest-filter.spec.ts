@@ -6,7 +6,7 @@ import { expect } from "chai";
 
 let logCollector: string[] = [];
 class TestSimpleTextDestination extends SimpleTextDestination {
-    override _write(entry: IJLogEntry): void {
+    override write(entry: IJLogEntry): void {
         const result = this.formatOutput(entry);
         console.log(result);
 

@@ -2,8 +2,11 @@ import type {Writable} from 'stream';
 import * as Helper from './helper';
 
 import {
-    IJLogEntry, AbstractLogDestination, AbstractAsyncLogDestination
+    IJLogEntry, AbstractLogDestination, AbstractAsyncLogDestination, LogLevel, AbstractBaseDestination
 } from "./core";
+
+import { LoggerConfig, readLoggerConfig, IisWriteNeededParams} from './config';
+
 
 /**
  * Datatype for storing all log destinations
@@ -19,7 +22,8 @@ const DEFAULT_LOG_DESTINATION_NAME = 'default';
 export class LogWriter {
     private static instance: LogWriter | undefined = undefined;
 
-    private readonly destinations : TLogDestinations = {};
+    protected readonly config: LoggerConfig = readLoggerConfig();
+    protected readonly destinations : TLogDestinations = {};
     private processing = false;
 
     private constructor() {}
@@ -38,7 +42,11 @@ export class LogWriter {
      */
     public addDestination(destination: TLogDestination, name?: string): void {
         if (name === undefined) {
-            name = DEFAULT_LOG_DESTINATION_NAME;
+            if (destination instanceof AbstractBaseDestination) {
+                name = destination.constructor.name;
+            } else {
+                name = DEFAULT_LOG_DESTINATION_NAME;
+            }
         }
         this.destinations[name] = destination;
     }
@@ -78,19 +86,38 @@ export class LogWriter {
      *
      * @param entry 
      */
-    public async write(entry: IJLogEntry): Promise<void> {
+    public async write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): Promise<void> {
         const promises: Promise<void>[] = [];
+
+        // This flag is used to turn async into a sync method
         this.processing = true;
 
         try {
-            for (const [_, destination] of Object.entries(this.destinations)) {
+            for (const [destinationName, destination] of Object.entries(this.destinations)) {
+                // Create the the params needed to check if log is needed
+                const params: IisWriteNeededParams = {
+                    loggerLevel,
+                    destinationName
+                };
+
+                if (destination instanceof AbstractBaseDestination) {
+                    params.destinationLevel = destination.level;
+                    params.destinationFilters = destination.filters;
+                }
+
+                // If log is not needed, skip this destination
+                if (!this.config.isWriteNeeded(entry, params)) {
+                    continue;
+                }
+
+                // Write log
                 if (destination instanceof AbstractAsyncLogDestination) {
-                    promises.push(destination.write(entry));
+                    promises.push(destination.write(entry, loggerLevel));
+                } else if (destination instanceof AbstractLogDestination) {
+                    destination.write(entry, loggerLevel);
                 } else {
-                    /*
-                    destination in this case could be either AbstractLogDestination or Writable,
-                    both with .write method
-                    */
+                    // If writable
+                    // TODO: implement writeLog check based on loggerName and level
                     destination.write(entry);
                 }
             }

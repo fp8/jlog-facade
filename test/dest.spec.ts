@@ -1,43 +1,21 @@
 import {
-    IJLogEntry, KV, LoggerFactory,
-    ISimpleJsonOutput, SimpleTextDestination, SimpleJsonDestination, LogLevel
+    KV, LoggerFactory,
+    LogLevel
 } from "@fp8proj";
-import { expect } from "chai";
 
-let logCollector: string[] = [];
-class TestSimpleTextDestination extends SimpleTextDestination {
-    override _write(entry: IJLogEntry): void {
-        const result = this.formatOutput(entry);
-        console.log(result);
+import {
+    expect,
+    logCollector, clearLogCollector,
+    TestSimpleTextDestination, TestSimpleJsonDestination
+} from "./testlib";
 
-        // Delete the timestamp from collected log as it can't be tested
-        const splitAt = result.indexOf('|');
-        if (splitAt) {
-            logCollector.push(result.substring(splitAt));
-        } else {
-            logCollector.push(result);
-        }
-    }
-}
-
-class TestSimpleJsonDestination extends SimpleJsonDestination {
-    override _write(entry: IJLogEntry): void {
-        const result = this.formatOutput(entry);
-        console.log(JSON.stringify(result));
-
-        // Delete the timestamp from collected log as it can't be tested
-        const collect: Omit<ISimpleJsonOutput, 't'> = result;
-        delete collect.t;
-        logCollector.push(JSON.stringify(collect));
-    }
-}
 
 describe('dest', () => {
-    const logger = LoggerFactory.create('my-logger');
+    const logger = LoggerFactory.create('test-dest-logger');
 
     beforeEach(() => {
         LoggerFactory.clearLogDestination();
-        logCollector = [];
+        clearLogCollector();
     });
 
     it('text - simple info', () => {

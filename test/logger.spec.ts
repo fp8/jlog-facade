@@ -23,14 +23,14 @@ function addToLogCollector(source: string, entry: IJLogEntry) {
 }
 
 class TestDestination extends AbstractLogDestination {
-    override _write(entry: IJLogEntry): void {
+    override write(entry: IJLogEntry): void {
         addToLogCollector('SYNC', entry);
         console.log('TestDestination: ', JSON.stringify(entry));
     }
 }
 
 class TestAsyncDestination extends AbstractAsyncLogDestination {
-    override async _write(entry: IJLogEntry): Promise<void> {
+    override async write(entry: IJLogEntry): Promise<void> {
         return new Promise((resolve, _) => {
             setTimeout(() => {
                 addToLogCollector('ASYNC', entry);

@@ -1,6 +1,16 @@
 {
     "severity": "info",
-    "override": {
+    "logger": {
         "my-logger": "debug"
+    },
+    "destination": {
+        "TextDestination": {
+            "severity": "warn",
+            "filters": ["test-zEd7efJ0Pr"]
+        },
+        "JsonDestination": {
+            "severity": "error",
+            "filters": "test-D4qtS09paQ"
+        }
     }
 }

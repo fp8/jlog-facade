@@ -178,7 +178,7 @@ export class KV<T extends TLoggableValue> extends AbstractKeyValue<T> {
      * @param kvs 
      * @returns 
      */
-    public static merge<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
+    public static merge<T extends TLoggableValue>(...kvs: AbstractKeyValue<T>[]): IJson {
         return mergeKV(false, kvs);
     }
 
@@ -192,7 +192,7 @@ export class KV<T extends TLoggableValue> extends AbstractKeyValue<T> {
      * @param kvs 
      * @returns 
      */
-    public static mergeValue<T extends TLoggableValue>(...kvs: KV<T>[]): IJson {
+    public static mergeValue<T extends TLoggableValue>(...kvs: AbstractKeyValue<T>[]): IJson {
         return mergeKV(true, kvs)
     }
 

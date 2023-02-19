@@ -6,7 +6,7 @@ import { JLogger } from './logger';
  * 
  * Create an instance of {@link JLogger}
  * 
- * #### Usage:
+ * Usage:
  * 
  * ```ts
  * const logger = LoggerFactory.create('my-logger');

@@ -1,7 +1,0 @@
-{
-    "severity": "not-valid",
-    "override": {
-        "my-logger": "what-ever",
-        "another-logger": "debug"
-    }
-}
