@@ -6,4 +6,5 @@
 * Added support to set logger name filter on logger destination
 * Added support for configuring logger using `logger.json` file
 * Added `.getLogger` to `LoggerFactory` as an alias to `.create`
-
+* Added `LogLevel.OFF` to turn off the logger
+* Added `.use` to logger destination to internally add itself to `LoggerFactory`
