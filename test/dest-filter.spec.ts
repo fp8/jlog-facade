@@ -16,7 +16,13 @@ class TestWarnTextDestination extends TestSimpleTextDestination {
     }
 }
 
-describe.only('dest-filter', () => {
+class TestErrorTextDestination extends TestSimpleTextDestination {
+    static use(level?: string | LogLevel, ...filters: string[]): TestErrorTextDestination {
+        return useDestination(TestErrorTextDestination, level, filters);
+    }
+}
+
+describe('dest-filter', () => {
     const writer = LogWriter.getInstance();
     const loggerA = LoggerFactory.create('loggerA');
     const loggerB = LoggerFactory.create('loggerB');
@@ -54,6 +60,29 @@ describe.only('dest-filter', () => {
             '|W loggerA warn q1uXqyMhaG',
             '|W loggerB warn q1uXqyMhaG',
             '|W loggerC warn q1uXqyMhaG'
+        ]);
+    });
+
+    /**
+     * Expect 2 error logs as TestErrorTextDestination has no filter
+     */
+    it('from config error log - no dest logger', () => {
+        TestErrorTextDestination.use();
+        loggerA.error('loggerA error 5J7kqkGV2H');
+        expect(logCollector).to.eql([
+            '|E loggerA error 5J7kqkGV2H',
+            '|E loggerA error 5J7kqkGV2H'
+        ]);
+    });
+
+    /**
+     * Expect 1 error log as filter added to TestErrorTextDestination
+     */
+    it('from config error log - with dest logger', () => {
+        TestErrorTextDestination.use(LogLevel.PANIC, 'loggerA');
+        loggerA.error('loggerA error jTo2L0k0Q9');
+        expect(logCollector).to.eql([
+            '|E loggerA error jTo2L0k0Q9'
         ]);
     });
 });
