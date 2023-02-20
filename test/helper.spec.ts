@@ -1,7 +1,7 @@
-import {expect} from './testlib';
+import { expect } from './testlib';
 
 import {
-    isEmpty
+    isEmpty, localDebug
 } from '@fp8proj/helper';
 
 describe('helper', () => {
@@ -20,5 +20,10 @@ describe('helper', () => {
         // Boolean are never empty
         expect(isEmpty(false)).to.be.false;
         expect(isEmpty(true)).to.be.false;
-    })
+    });
+
+    it('test debug -- Should not throw error', () => {
+        const data = '{"bad":12';
+        localDebug(() => `Test: ${JSON.stringify(JSON.parse(data))}`);
+    });
 });

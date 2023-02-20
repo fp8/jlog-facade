@@ -1,0 +1,19 @@
+{
+    "severity": "not-valid",
+    "logger": {
+        "my-logger": "what-ever",
+        "another-logger": "debug"
+    },
+    "destination": {
+        "TestSimpleNumberDestination": 123,
+        "TestSimpleNumbersDestination": [1, 2, 4],
+        "TestSimpleNullDestination": null,
+        "TestSimpleBooleanDestination": {
+            "level": true,
+            "filters": 123
+        },
+        "TestSimpleTextDestination": {
+            "filters": ["the-logger"]
+        }
+    }
+}

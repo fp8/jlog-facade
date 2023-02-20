@@ -1,6 +1,10 @@
-import { AbstractLogDestination, AbstractLoggable, IJLogEntry, IJson, mergeIJson, TJsonValue } from "./core";
+import {
+    AbstractLogDestination, AbstractLoggable, IJLogEntry,
+    IJson, LogLevel, mergeIJson, TJsonValue
+} from "./core";
 import { mergeLoggableModels } from './models';
 import { isEmpty } from "./helper";
+import { LoggerFactory } from "./factory";
 
 export interface ISimpleJsonOutput extends IJson {
     t: string; // time
@@ -49,6 +53,37 @@ export function buildOutputDataForDestination(loggables?: AbstractLoggable[], da
     return output;
 }
 
+/**
+ * Helper class to be used for `.use` static method for a AbstractLogDestination
+ *
+ * @param type 
+ * @param level 
+ * @param filters 
+ * @returns 
+ */
+export function useDestination<T extends AbstractLogDestination>(
+    type: {new(level?: LogLevel): T ;},
+    level?: string | LogLevel, filters?: string[]
+): T {
+    let destination: T;
+
+    if (filters === undefined) {
+        filters = [];
+    }
+
+    if (typeof level === 'string') {
+        // Level is not passed so `level` param is the first entry of filters
+        destination = new type();
+        destination.appendLoggerNameFilter(level, ...filters);
+    } else {
+        destination = new type(level);
+        destination.appendLoggerNameFilter(...filters);
+    }
+    
+    LoggerFactory.addLogDestination(destination);
+    return destination;
+}
+
 
 /**
  * A minimalistic json based destination that will output json in the following sequence:
@@ -60,8 +95,31 @@ export function buildOutputDataForDestination(loggables?: AbstractLoggable[], da
  * - other payload sent to the logger
  */
 export class SimpleJsonDestination extends AbstractLogDestination {
-    constructor(private logStackTrace = true) {
-        super();
+    /**
+     * Add this destination to LoggerFactory.  Usage:
+     * 
+     * Use default or configured setting from logger.json
+     * 
+     * - `SimpleJsonDestination.use());`
+     * 
+     * Set both level and logger name filter
+     * 
+     * - `SimpleJsonDestination.use(LogLevel.INFO, 'my-logger');`
+     *  
+     * Set only logger name filter
+     * 
+     * - `SimpleJsonDestination.use('my-logger', 'another-logger');`
+     * 
+     * @param level 
+     * @param filters 
+     * @returns 
+     */
+    public static use(level?: string | LogLevel, ...filters: string[]): SimpleJsonDestination {
+        return useDestination(SimpleJsonDestination, level, filters);
+    }
+
+    constructor(level?: LogLevel, private logStackTrace = true) {
+        super(level);
     }
 
     protected formatOutput(entry: IJLogEntry): ISimpleJsonOutput {
@@ -99,6 +157,29 @@ export class SimpleJsonDestination extends AbstractLogDestination {
  * - `2022-11-02T19:51:55.438Z|E Create company failed [BadRequest:Missing vat number] {"name":"ACME Inc"}`
  */
 export class SimpleTextDestination extends AbstractLogDestination {
+    /**
+     * Add this destination to LoggerFactory.  Usage:
+     * 
+     * Use default or configured setting from logger.json
+     * 
+     * - `SimpleJsonDestination.use());`
+     * 
+     * Set both level and logger name filter
+     * 
+     * - `SimpleJsonDestination.use(LogLevel.INFO, 'my-logger');`
+     *  
+     * Set only logger name filter
+     * 
+     * - `SimpleJsonDestination.use('my-logger', 'another-logger');`
+     * 
+     * @param level 
+     * @param filters 
+     * @returns 
+     */
+    public static use(level?: string | LogLevel, ...filters: string[]): SimpleTextDestination {
+        return useDestination(SimpleTextDestination, level, filters);
+    }
+
     protected formatOutput(entry: IJLogEntry): string {
         const header = `${entry.time.toISOString()}|${entry.severity.toUpperCase().charAt(0)}`;
 

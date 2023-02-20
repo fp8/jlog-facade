@@ -1,6 +1,6 @@
 import {
-    TJsonValue, IJson,
-    LogSeverity, LogLevel,
+    TJsonValue, IJson, DEFAULT_LOG_LEVEL,
+    LogSeverity, LogLevel, convertSeverityToLevel,
     IJLogEntry, AbstractLoggable,
     mergeIJson
 } from './core';
@@ -25,30 +25,7 @@ export type TLoggableEntry = Error | TLoggableParam;
  * Json Logger objact.  Do not use this class directly; always create an instance of JLogger using {@link LoggerFactory}
  */
 export class JLogger {
-    constructor(private name: string) {}
-
-    /**
-     * Function to convert severity string to a level number
-     * @param severity 
-     * @returns 
-     */
-    private logSeverityToLevel(severity: string | LogSeverity): LogLevel {
-        switch (severity) {
-            case LogSeverity.DEBUG:
-                return LogLevel.DEBUG;
-            case LogSeverity.INFO:
-                return LogLevel.INFO;
-            case LogSeverity.WARNING:
-                return LogLevel.WARNING;
-            case LogSeverity.ERROR:
-                return LogLevel.ERROR;
-            case LogSeverity.PANIC:
-                return LogLevel.PANIC;
-            default:
-                return LogLevel.INFO;
-        }
-    }
-
+    constructor(private name: string, public readonly logLevel?: LogLevel) {}
 
     /**
      * Isolate the first error from the params and return a clean LoggableParams
@@ -132,7 +109,7 @@ export class JLogger {
             return;
         }
 
-        const level = this.logSeverityToLevel(severity);
+        const level = convertSeverityToLevel(severity) ?? DEFAULT_LOG_LEVEL;
 
         // Extract data to log from params
         const [error, params] = this.extractError(message, rest);
@@ -167,7 +144,7 @@ export class JLogger {
             entry.values = values;
         }
 
-        writer.write(entry);
+        writer.write(entry, this.logLevel);
     }
 
     /** Write a {@link LogSeverity.DEBUG} severity log */

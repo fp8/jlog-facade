@@ -1,5 +1,8 @@
 // ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
-import {isArray} from './helper';
+import * as fs from 'fs';
+import {isArray, localError, localDebug} from './helper';
+
+
 
 /**
  * Allowed Json Value Type
@@ -26,7 +29,8 @@ export enum LogSeverity {
     INFO = 'info',
     WARNING = 'warn',
     ERROR = 'error',
-    PANIC = 'panic'
+    PANIC = 'panic',
+    OFF = 'off'
 }
 
 /**
@@ -38,7 +42,52 @@ export enum LogLevel {
     INFO = 200,
     WARNING = 400,
     ERROR = 500,
-    PANIC = 800
+    PANIC = 800,
+    OFF = 999_999
+}
+
+/**
+ * The default log level if level or severity is not provided.
+ */
+export const DEFAULT_LOG_LEVEL = LogLevel.INFO;
+
+/**
+ * Translate LogSeverity to LogLevel.  Severity is case insensitive
+ * 
+ * @param input 
+ * @returns 
+ */
+export function convertSeverityToLevel(input?: string | LogSeverity): LogLevel | undefined {
+    // NOTE: this function cannot be in helper as it has dependency from core.ts
+
+    switch(input?.toLowerCase()) {
+        case LogSeverity.DEBUG:
+        case 'debug':
+            return LogLevel.DEBUG;
+
+        case LogSeverity.INFO:
+        case 'info':
+            return LogLevel.INFO;
+        
+        case LogSeverity.WARNING:
+        case 'warning':
+        case 'warn':
+            return LogLevel.WARNING;
+        
+        case LogSeverity.ERROR:
+        case 'error':
+            return LogLevel.ERROR;
+
+        case LogSeverity.PANIC:
+        case 'panic':
+            return LogLevel.PANIC;
+
+        case LogSeverity.OFF:
+        case 'off':
+            return LogLevel.OFF;
+        default:
+            return undefined;
+    }
 }
 
 /**
@@ -73,18 +122,43 @@ export abstract class AbstractLoggable {
     abstract toIJson(): IJson
 }
 
+export abstract class AbstractBaseDestination {
+    // abstract DESTINATION_NAME: string;
+    protected _logNameFilter: string[] | undefined;
+
+    constructor(public readonly level?: LogLevel) {}
+
+    public appendLoggerNameFilter(...filters: string[]): void {
+        if (filters.length) {
+            if (this._logNameFilter === undefined) {
+                this._logNameFilter = filters;
+            } else {
+                this._logNameFilter.push(...filters);
+            }
+        }
+    }
+
+    public get filters(): string[] | undefined {
+        return this._logNameFilter;
+    }
+
+    public clearLoggerNameFilter(): void {
+        this._logNameFilter = undefined;
+    }
+}
+
 /**
  * A log destination that will write to output synchronously
  */
-export abstract class AbstractLogDestination {
-    abstract write(entry: IJLogEntry): void;
+export abstract class AbstractLogDestination extends AbstractBaseDestination {
+    abstract write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): void;
 }
 
 /**
  * A log destination that will write to output asynchronously
  */
-export abstract class AbstractAsyncLogDestination {
-    abstract write(entry: IJLogEntry): Promise<void>;
+export abstract class AbstractAsyncLogDestination extends AbstractBaseDestination {
+    abstract write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): Promise<void>;
 }
 
 /**
@@ -123,11 +197,30 @@ export function convertValueToIJson(input: TLoggableValue | TLoggableValue[]): T
  * @param input source IJson
  * @param cummulator destination IJson
  */
-export function mergeIJson(cummulator: IJson, ...values: IJson[]) {
+export function mergeIJson(cummulator: IJson, ...values: IJson[]): void {
     // Merge incoming IJson into data
     for (const entry of values) {
         for (const [key, value] of Object.entries(entry)) {
             cummulator[key] = value;
         }
     }
+}
+
+export function loadJsonFile(filepath: string): IJson | undefined {
+    if (!filepath.endsWith('.json')) {
+        localDebug(`loadJsonFile not loading ${filepath} as it doesn't end with .json`);
+        return undefined;
+    }
+
+    let loaded: IJson;
+    try {
+        const content = fs.readFileSync(filepath, {encoding: 'utf8'});
+        localDebug(`Config from logger.json: ${content}`);
+        loaded = JSON.parse(content);
+    } catch(e) {
+        localError(`Failed to load json file ${filepath}`, e as Error);
+        return undefined;
+    }
+
+    return loaded;
 }

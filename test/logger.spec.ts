@@ -1,55 +1,15 @@
-import { expect } from './testlib';
-import { Writable } from 'stream';
+import {
+    expect,
+    logCollector, entryCollector,
+    clearLogCollector, clearEntryCollector,
+    TestDestination, TestAsyncDestination, TestLogStream
+} from './testlib';
 
 import {
     IJLogEntry, LoggerFactory,
-    AbstractLogDestination, AbstractAsyncLogDestination,
-    KV, Tags, mergeLoggableModels, buildOutputDataForDestination, AbstractLoggable
+    KV, Tags, mergeLoggableModels, buildOutputDataForDestination, AbstractLoggable, LogLevel
 } from '@fp8proj';
 import {LogWriter} from '@fp8proj/writer';
-
-let logCollector: string[] = [];
-let entryCollector: IJLogEntry[] = [];
-
-function addToLogCollector(source: string, entry: IJLogEntry) {
-    let message = `${source}-${entry.severity}`;
-
-    if (entry.message !== undefined) {
-        message = `${message}: ${entry.message}`
-    }
-
-    logCollector.push(message);
-    entryCollector.push(entry);
-}
-
-class TestDestination extends AbstractLogDestination {
-    write(entry: IJLogEntry): void {
-        addToLogCollector('SYNC', entry);
-        console.log('TestDestination: ', JSON.stringify(entry));
-    }
-}
-
-class TestAsyncDestination extends AbstractAsyncLogDestination {
-    async write(entry: IJLogEntry): Promise<void> {
-        return new Promise((resolve, _) => {
-            setTimeout(() => {
-                addToLogCollector('ASYNC', entry);
-                console.log('TestAsyncDestination: ', JSON.stringify(entry));
-                resolve();
-            }, 200);
-        });
-    }
-}
-
-class TestLogStream extends Writable {
-    constructor() {
-        super({objectMode: true});
-    }
-    override _write(chunk: IJLogEntry, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
-        addToLogCollector('STREAM', chunk);
-        console.log('TestLogStream: ', JSON.stringify(chunk));
-    }
-}
 
 /**
  * Ensure that entry collector has collected one entry
@@ -76,8 +36,8 @@ describe('logger', () => {
 
     beforeEach(() => {
         dest.clearDestinations();
-        logCollector = [];
-        entryCollector = [];
+        clearLogCollector();
+        clearEntryCollector();
     });
 
     it('no log', () => {
@@ -86,7 +46,7 @@ describe('logger', () => {
     });
 
     it('debug log', () => {
-        dest.addDestination(new TestDestination());
+        dest.addDestination(new TestDestination(LogLevel.DEBUG));
         logger.debug('FAySD0HVfS');
         expect(logCollector).to.eql(['SYNC-debug: FAySD0HVfS']);
     });
@@ -118,7 +78,7 @@ describe('logger', () => {
         ]);
 
         // Step 2: remove one destination
-        logCollector = [];
+        clearLogCollector();
 
         LoggerFactory.removeLogDestination('stream');
         logger.panic('6gaabROqBx');
@@ -179,8 +139,6 @@ describe('logger', () => {
         expect(entryCollector[1].values).is.eql(['This is not an error']);
         expect(entryCollector[1].error).is.undefined;
         expect(entryCollector[1].data).is.undefined;
-
-
     });
 
     it('Test invalid number as Error', () => {

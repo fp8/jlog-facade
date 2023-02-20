@@ -1,45 +1,21 @@
 import {
-    IJLogEntry, KV, LoggerFactory,
-    ISimpleJsonOutput, SimpleTextDestination, SimpleJsonDestination
+    KV, LoggerFactory,
+    LogLevel
 } from "@fp8proj";
-import { expect } from "chai";
 
-let logCollector: string[] = [];
-class TestSimpleTextDestination extends SimpleTextDestination {
-    override write(entry: IJLogEntry): void {
-        const result = this.formatOutput(entry);
-        console.log(result);
-
-        // Delete the timestamp from collected log as it can't be tested
-        const splitAt = result.indexOf('|');
-        if (splitAt) {
-            logCollector.push(result.substring(splitAt));
-        } else {
-            logCollector.push(result);
-        }
-    }
-}
-
-class TestSimpleJsonDestination extends SimpleJsonDestination {
-    override write(entry: IJLogEntry): void {
-        const result = this.formatOutput(entry);
-        console.log(JSON.stringify(result));
-
-        // Delete the timestamp from collected log as it can't be tested
-        const collect: Omit<ISimpleJsonOutput, 't'> = result;
-        delete collect.t;
-        logCollector.push(JSON.stringify(collect));
-    }
-}
-
+import {
+    expect,
+    logCollector, clearLogCollector,
+    TestSimpleTextDestination, TestSimpleJsonDestination
+} from "./testlib";
 
 
 describe('dest', () => {
-    const logger = LoggerFactory.create('my-logger');
+    const logger = LoggerFactory.create('test-dest-logger');
 
     beforeEach(() => {
         LoggerFactory.clearLogDestination();
-        logCollector = [];
+        clearLogCollector();
     });
 
     it('text - simple info', () => {
@@ -68,8 +44,14 @@ describe('dest', () => {
         expect(logCollector).is.eql([ '|W This is warning of k2haHZGtKy {"entry":"NmAlwOI6D7"}' ]);
     });
 
-    it('json - simple debug', () => {
+    it('json - simple debug - no setting', () => {
         LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        logger.debug('Debug message for 40duGee19n');
+        expect(logCollector).is.eql([]);
+    });
+
+    it('json - simple debug', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.DEBUG));
         logger.debug('Debug message for VnFdNvbyTq');
         expect(logCollector).is.eql(['{"m":"D|Debug message for VnFdNvbyTq"}']);
     });
@@ -81,7 +63,7 @@ describe('dest', () => {
     });
 
     it('json - error', () => {
-        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(false));
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.INFO, false));
         const error = new Error('vOGQbtxvfD');
         logger.error(error);
         expect(logCollector).is.eql(['{"m":"E|vOGQbtxvfD","e":"Error: vOGQbtxvfD"}']);
@@ -100,4 +82,77 @@ describe('dest', () => {
         expect(json.s).satisfies((message: string) => message.startsWith('Error: qbsKviHUSV'));
     });
 
+    it('json - LogLevel INFO', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.WARNING));
+
+        logger.debug('Debug message for bCp3NvdMko');
+        expect(logCollector).is.eql([]);
+        logger.info('Info message for bCp3NvdMko');
+        expect(logCollector).is.eql([]);
+        
+        logger.warn('Warn message for bCp3NvdMko');
+        expect(logCollector).is.eql(['{"m":"W|Warn message for bCp3NvdMko"}']);
+
+        logger.error('Error message for bCp3NvdMko');
+        expect(logCollector).is.eql([
+            '{"m":"W|Warn message for bCp3NvdMko"}',
+            '{"m":"E|Error message for bCp3NvdMko"}'
+        ]);
+
+        logger.panic('Panic message for bCp3NvdMko');
+        expect(logCollector).is.eql([
+            '{"m":"W|Warn message for bCp3NvdMko"}',
+            '{"m":"E|Error message for bCp3NvdMko"}',
+            '{"m":"P|Panic message for bCp3NvdMko"}'
+        ]);
+
+    });
+
+    it('json - LogLevel PANIC', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.PANIC));
+
+        logger.debug('Debug message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+        logger.info('Info message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+        logger.warn('Warn message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+        logger.error('Error message for fYKShPyBvI');
+        expect(logCollector).is.eql([]);
+
+        logger.panic('Panic message for fYKShPyBvI');
+        expect(logCollector).is.eql([
+            '{"m":"P|Panic message for fYKShPyBvI"}'
+        ]);
+    });
+
+    it('logger level override', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        const logger = LoggerFactory.getLogger('logger-mrtd38MwG8', LogLevel.WARNING);
+
+        logger.info('info log for logger-mrtd38MwG8');
+        logger.warn('warn log for logger-mrtd38MwG8');
+        logger.error('error log for logger-mrtd38MwG8');
+        
+        expect(logCollector).is.eql([
+            '{"m":"W|warn log for logger-mrtd38MwG8"}',
+            '{"m":"E|error log for logger-mrtd38MwG8"}'
+        ]);
+    });
+
+    it('logger level override - ', () => {
+        // Destination overrides level of logger
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.INFO));
+        const logger = LoggerFactory.getLogger('logger-ThBC4wm1OJ', LogLevel.ERROR);
+
+        logger.info('info log for logger-ThBC4wm1OJ');
+        logger.warn('warn log for logger-ThBC4wm1OJ');
+        logger.error('error log for logger-ThBC4wm1OJ');
+        
+        expect(logCollector).is.eql([
+            '{"m":"I|info log for logger-ThBC4wm1OJ"}',
+            '{"m":"W|warn log for logger-ThBC4wm1OJ"}',
+            '{"m":"E|error log for logger-ThBC4wm1OJ"}'
+        ]);
+    });
 });
