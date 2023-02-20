@@ -1,5 +1,6 @@
 import { TLogDestination, LogWriter } from './writer';
 import { JLogger } from './logger';
+import { LogLevel } from './core';
 
 /**
  * ## Json Logger Façada
@@ -32,8 +33,8 @@ export class LoggerFactory {
      * @param name 
      * @returns 
      */
-    public static create(name: string): JLogger {
-        return new JLogger(name);
+    public static create(name: string, level?: LogLevel): JLogger {
+        return new JLogger(name, level);
     }
 
     /**
@@ -42,8 +43,8 @@ export class LoggerFactory {
      * @param name 
      * @returns 
      */
-    public static getLogger(name: string): JLogger {
-        return LoggerFactory.create(name);
+    public static getLogger(name: string, level?: LogLevel): JLogger {
+        return LoggerFactory.create(name, level);
     }
 
     /**

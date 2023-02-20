@@ -44,6 +44,12 @@ describe('dest', () => {
         expect(logCollector).is.eql([ '|W This is warning of k2haHZGtKy {"entry":"NmAlwOI6D7"}' ]);
     });
 
+    it('json - simple debug - no setting', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        logger.debug('Debug message for 40duGee19n');
+        expect(logCollector).is.eql([]);
+    });
+
     it('json - simple debug', () => {
         LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.DEBUG));
         logger.debug('Debug message for VnFdNvbyTq');
@@ -120,4 +126,33 @@ describe('dest', () => {
         ]);
     });
 
+    it('logger level override', () => {
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination());
+        const logger = LoggerFactory.getLogger('logger-mrtd38MwG8', LogLevel.WARNING);
+
+        logger.info('info log for logger-mrtd38MwG8');
+        logger.warn('warn log for logger-mrtd38MwG8');
+        logger.error('error log for logger-mrtd38MwG8');
+        
+        expect(logCollector).is.eql([
+            '{"m":"W|warn log for logger-mrtd38MwG8"}',
+            '{"m":"E|error log for logger-mrtd38MwG8"}'
+        ]);
+    });
+
+    it('logger level override - ', () => {
+        // Destination overrides level of logger
+        LoggerFactory.addLogDestination(new TestSimpleJsonDestination(LogLevel.INFO));
+        const logger = LoggerFactory.getLogger('logger-ThBC4wm1OJ', LogLevel.ERROR);
+
+        logger.info('info log for logger-ThBC4wm1OJ');
+        logger.warn('warn log for logger-ThBC4wm1OJ');
+        logger.error('error log for logger-ThBC4wm1OJ');
+        
+        expect(logCollector).is.eql([
+            '{"m":"I|info log for logger-ThBC4wm1OJ"}',
+            '{"m":"W|warn log for logger-ThBC4wm1OJ"}',
+            '{"m":"E|error log for logger-ThBC4wm1OJ"}'
+        ]);
+    });
 });
