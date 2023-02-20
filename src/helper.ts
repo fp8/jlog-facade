@@ -81,10 +81,43 @@ export function localError(message: string, error?: Error): void {
 }
 
 /**
- * A local debug output
+ * A local debug output.  Pass a callback as a messaage to safely log debug message.
+ * 
+ * If debug `name` is passed, the debug will only write if:
+ * 
+ * 1. name starts with string set in DEBUG environmental variable
+ * 2. DEBUG is set to `*`
+ * 3. DEBUG is set to `local`
+ *
  */
-export function localDebug(message: string): void {
+export function localDebug(input: string | (() => string), name?: string): void {
     if (process.env.DEBUG) {
-        console.debug(`[D] ${message}`);
+        // If debug name is passed, check that it matches
+        if (name !== undefined) {
+            let toDebug = false;
+            if (process.env.DEBUG === '*' || process.env.DEBUG === 'local') {
+                toDebug = true;
+            } else if (name.startsWith(process.env.DEBUG)) {
+                toDebug = true;
+            }
+            if (!toDebug) {
+                return;
+            }
+        }
+
+        let message: string | undefined = undefined;
+        if (typeof input === 'string') {
+            message = input;
+        } else {
+            try {
+                message = input();
+            } catch (e) {
+                console.error(`[D ERROR] ${e}.  Failed to create log`);
+            }
+        }
+
+        if (message) {
+            console.debug(`[D] ${message}`);
+        }
     }
 }

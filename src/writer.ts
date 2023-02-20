@@ -1,5 +1,5 @@
 import type {Writable} from 'stream';
-import * as Helper from './helper';
+import {isEmpty, delay, localError} from './helper';
 
 import {
     IJLogEntry, AbstractLogDestination, AbstractAsyncLogDestination, LogLevel, AbstractBaseDestination
@@ -22,7 +22,7 @@ const DEFAULT_LOG_DESTINATION_NAME = 'default';
 export class LogWriter {
     private static instance: LogWriter | undefined = undefined;
 
-    protected readonly config: LoggerConfig = readLoggerConfig();
+    protected config: LoggerConfig = readLoggerConfig();
     protected readonly destinations : TLogDestinations = {};
     private processing = false;
 
@@ -78,7 +78,7 @@ export class LogWriter {
      * Check if destination has been set
      */
     public get hasDestination(): boolean {
-        return !Helper.isEmpty(this.destinations);
+        return !isEmpty(this.destinations);
     }
 
     /**
@@ -123,7 +123,7 @@ export class LogWriter {
             }
             await Promise.all(promises);
         } catch (err) {
-            Helper.localError('LogWriter.write failed', err as Error);
+            localError('LogWriter.write failed', err as Error);
         }
 
         this.processing = false;
@@ -140,10 +140,19 @@ export class LogWriter {
         while (looking || retry < maxRetry) {
             retry += 1;
             if (this.processing) {
-                await Helper.delay(50);
+                await delay(50);
             } else {
                 looking = false;
             }
         }
+    }
+
+    /**
+     * Reload the config.  This is created for testing purpose.
+     * 
+     * @param env 
+     */
+    public _reloadConfig(env?: string): void {
+        this.config = readLoggerConfig(env);
     }
 }

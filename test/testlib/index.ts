@@ -12,4 +12,4 @@ chai.use(sinonChai);
 export const {expect} = chai;
 export {sinon, chai};
 
-export * from './dest';
+export * from './test-dests';

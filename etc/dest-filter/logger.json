@@ -1,0 +1,16 @@
+{
+    "severity": "info",
+    "logger": {
+        "my-logger": "debug"
+    },
+    "destination": {
+        "TestSimpleTextDestination": {
+            "severity": "info",
+            "filters": ["loggerA"]
+        },
+        "TestWarnTextDestination": {
+            "severity": "warn",
+            "filters": "loggerB"
+        }
+    }
+}

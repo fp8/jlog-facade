@@ -62,6 +62,9 @@ export class LoggerConfig {
         } else {
             this.level = DEFAULT_LOG_LEVEL;
         }
+        localDebug(`LoggerConfig loaded with configDir ${configDir}`);
+        localDebug(`LoggerConfig loaded with loggerOverride ${this.loggerOverride}`);
+        localDebug(`LoggerConfig loaded with destinationOverride ${this.destinationOverride}`);
     }
 
     /**
@@ -74,10 +77,8 @@ export class LoggerConfig {
      * @param input 
      */
     public isWriteNeeded(entry: IJLogEntry, params: IisWriteNeededParams): boolean {
+        localDebug(`LoggerConfig.isWriteNeeded with params: ${JSON.stringify(params)}`);
         const {level, filters} = this.getLevelAndFilter(entry, params);
-
-        // console.log('### isWriteNeeded.level', level);
-        // console.log('### isWriteNeeded.filters', filters);
 
         if (level === LogLevel.OFF) {
             return false;
@@ -155,7 +156,10 @@ export class LoggerConfig {
             filters = [];
         }
 
-        // Resutl
+        localDebug(`LoggerConfig.getLevelAndFilter level ${level}`);
+        localDebug(`LoggerConfig.getLevelAndFilter filters ${filters}`);
+
+        // result
         return {level, filters};
     }
 

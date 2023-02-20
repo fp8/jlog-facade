@@ -5,6 +5,13 @@ export {
     AbstractLogDestination, AbstractAsyncLogDestination
 } from './core';
 
+export {
+    delay,
+    isNullOrUndefined, isEmpty,
+    isArray, isObject,
+    localDebug
+} from './helper';
+
 export * from './models';
 export * from './dest';
 export * from './factory';
