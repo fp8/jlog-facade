@@ -99,7 +99,7 @@ LoggerFactory.addLogDestination(new SimpleJsonDestination());
 
 A `logger.json` can be placed under `./etc/${FP8_ENV}/logger.json` or `./config/${FP8_ENV}/logger.json` with the following content:
 
-```json
+```jsonc
 {
   // This is default logger level
   "severity": "info",
