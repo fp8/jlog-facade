@@ -1,7 +1,8 @@
 import {
     TJsonValue, IJson,
     AbstractLoggable, TLoggableValue,
-    convertValueToIJson, mergeIJson
+    convertToJsonValue,
+    convertLoggableValueToIJson, mergeIJson
 } from "./core";
 
 import {isArray, isObject} from './helper';
@@ -44,7 +45,7 @@ function mergeKV(mergeValue: boolean, kvs: AbstractKeyValue<TLoggableValue>[]): 
                 appendToSet(merged[key], result[key]);
             }
 
-            const converted = convertValueToIJson(value);
+            const converted = convertLoggableValueToIJson(value);
             if (isArray(converted)) {
                 converted.forEach(
                     convertedEntry => merged[key].add(convertedEntry)
@@ -53,7 +54,7 @@ function mergeKV(mergeValue: boolean, kvs: AbstractKeyValue<TLoggableValue>[]): 
                 merged[key].add(converted);
             }
         } else {
-            result[key] = convertValueToIJson(value);
+            result[key] = convertLoggableValueToIJson(value);
         }
     }
 
@@ -121,7 +122,7 @@ export function mergeLoggableModels<T extends TLoggableValue>(...loggables: Abst
 /**
  * Abstract class serving foundation for Key Value loggables
  */
-export abstract class AbstractKeyValue<T extends TLoggableValue> extends AbstractLoggable {
+export abstract class AbstractKeyValue<T> extends AbstractLoggable {
     protected _key: string;
     protected _value: T | T[];
 
@@ -146,11 +147,33 @@ export abstract class AbstractKeyValue<T extends TLoggableValue> extends Abstrac
      */
     toIJson(): IJson {
         return {
-            [this.key]: convertValueToIJson(this.value)
+            [this.key]: convertToJsonValue(this.value)
         };
     }
+}
 
-
+/**
+ * Allow adding of a simple key/value pair to a log where value can be
+ * any value.
+ * 
+ * Please note that internally this would converted to JSON using
+ * JSON.stringify.  Therefore, any content that cannot be parsed
+ * will result in '[object Object]' output.
+ * 
+ * It's preferred to use {@link KV} instead of this method as {@link KV} enforces
+ * the use of TLoggableValue
+ */
+export class Loggable<T> extends AbstractKeyValue<T> {
+    /**
+     * Factory method for KV
+     *
+     * @param key 
+     * @param value 
+     * @returns 
+     */
+    public static of<T>(key: string, value: T): Loggable<T> {
+        return new Loggable(key, value);
+    }
 }
 
 /**
@@ -217,7 +240,7 @@ export class KV<T extends TLoggableValue> extends AbstractKeyValue<T> {
      */
     toIJson(): IJson {
         return {
-            [this.key]: convertValueToIJson(this.value)
+            [this.key]: convertLoggableValueToIJson(this.value)
         };
     }
 }
