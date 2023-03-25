@@ -41,10 +41,10 @@ logger.info('The process has started', {processId: 123456});
 
 Logger methods also accept an [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) which exposes `.toJson` method allowing any custom object to be written to the log.  All the entries are merged before the log and by default, duplicated keys are resolved by first key having priority over any subsquent keys.
 
-[AbstractKeyValue](https://fp8.github.io/jlog-facade/classes/AbstractKeyValue.html) is an implementation of [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) creates a simple key/value pair object where value can be another instance of [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html).  A sample implementation is [KV](https://fp8.github.io/jlog-facade/classes/KV.html):
+[AbstractKeyValue](https://fp8.github.io/jlog-facade/classes/AbstractKeyValue.html) is an implementation of [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) that creates a simple key/value pair object where value can be any data type.  A sample implementation is [KV](https://fp8.github.io/jlog-facade/classes/KV.html) which enforces the value to be instance of [TLoggableValue](https://fp8.github.io/jlog-facade/types/TLoggableValue.html):
 
 ```ts
-logger.info('The process has started', new KV('processId', 123456), new KV('processId', 888));
+logger.info('The process has started', KV.of('processId', 123456), new KV.of('processId', 888));
 ```
 
 The value of the `processId` key in above example is `123456` as it's the first value set.
@@ -54,10 +54,21 @@ The value of the `processId` key in above example is `123456` as it's the first 
 Another built-in [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) is [Label](https://fp8.github.io/jlog-facade/classes/Label.html) that allow caller to pass a key and one or more values.  Please note that value of the [Label](https://fp8.github.io/jlog-facade/classes/Label.html) is always a list, even if only one value is passed to the constructor.  The duplicate keys of [Label](https://fp8.github.io/jlog-facade/classes/Label.html) passed are merged instead of overwriten:
 
 ```ts
-logger.info('The process has started', new Label('processId', 123456), new Label('processId', 888));
+logger.info('The process has started', Label.of('processId', 123456), Label.of('processId', 888));
 ```
 
 The value of the `processId` key in above example is `[123456, 888]`.
+
+#### Loggable
+
+A [Loggable](https://fp8.github.io/jlog-facade/classes/Loggable.html) is a special implementation of [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) that accept any data type as value.  However, if value passed contains any attributes that cannot be processed by `JSON.stringify()`, the result will be a string of `[object Object]`.  As result, it's recommend the use of [KV](https://fp8.github.io/jlog-facade/classes/KV.html) instead.
+
+```ts
+logger.info('The process has started', Loggable.of('date', new Date('2023-03-24')));
+```
+
+The value of the `date` key in above example would be `2023-03-24T00:00:00.000Z`.
+
 
 ### Log Destination
 

@@ -1,5 +1,9 @@
 # jlog-facade Release Note
 
+## 0.7.0 [2023-03-24]
+
+* Added `Loggable` with support for any data type
+
 ## 0.6.0 [2023-02-18]
 
 * Added support to set `LogLevel` on logger and desitination
