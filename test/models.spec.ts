@@ -1,6 +1,6 @@
 import {expect} from './testlib';
 
-import {KV, Label, Tags} from '@fp8proj';
+import {KV, Label, Tags, Loggable} from '@fp8proj';
 
 class KVS extends KV<string> {}
 
@@ -38,6 +38,23 @@ describe('models', () => {
     it('simple StringLabel', () => {
         const entry = new StringLabel('testStringLabel', 'dDVfo39D3f', 'HCJejdQNBT');
         expect(entry.toIJson()).to.eql({ testStringLabel: ['dDVfo39D3f', 'HCJejdQNBT'] });
+    });
+
+    it('simple Loggable', () => {
+        const entry = Loggable.of('testLoggable', {today: new Date('2023-03-24'), weekday: 'FRI'});
+        expect(entry.toIJson()).to.eql({
+            testLoggable: {
+                today: '2023-03-24T00:00:00.000Z',
+                weekday: 'FRI'
+            }
+        });
+    });
+
+    it('error Loggable', () => {
+        const entry = Loggable.of('testLoggable', {orders: BigInt('123')});
+        expect(entry.toIJson()).to.eql({
+            testLoggable: '[object Object]'
+        });
     });
 
     it('merge kvs simple', () => {

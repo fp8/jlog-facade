@@ -1,6 +1,6 @@
 // ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
 import * as fs from 'fs';
-import {isArray, localError, localDebug} from './helper';
+import {isArray, localError, localDebug, isObject} from './helper';
 
 
 
@@ -167,7 +167,7 @@ export abstract class AbstractAsyncLogDestination extends AbstractBaseDestinatio
  * @param input 
  * @returns 
  */
-function convertValueToJsonValue(input: TLoggableValue): TJsonValue {
+function convertLoggableValueToJsonValue(input: TLoggableValue): TJsonValue {
     if (input instanceof AbstractLoggable) {
         return input.toIJson();
     } else {
@@ -181,15 +181,68 @@ function convertValueToJsonValue(input: TLoggableValue): TJsonValue {
  * @param input 
  * @returns 
  */
-export function convertValueToIJson(input: TLoggableValue | TLoggableValue[]): TJsonValue | TJsonValue[] {
+export function convertLoggableValueToIJson(input: TLoggableValue | TLoggableValue[]): TJsonValue | TJsonValue[] {
     if (isArray(input)) {
         return input.map(
-            entry => convertValueToJsonValue(entry)
+            entry => convertLoggableValueToJsonValue(entry)
         )
     } else {
-        return convertValueToJsonValue(input);
+        return convertLoggableValueToJsonValue(input);
     }
 }
+
+/**
+ * Transform any data input into a json value
+ *
+ * @param input 
+ * @returns 
+ */
+export function convertToJsonValue(input: unknown | unknown[]): TJsonValue | TJsonValue[] | undefined {
+    let result: TJsonValue | TJsonValue[] | undefined = undefined;
+
+    if (input === null || input === undefined || typeof input === 'function') {
+        result = undefined;
+    } else if (input instanceof AbstractLoggable) {
+        result = convertLoggableValueToJsonValue(input);
+    } else if (isObject(input)) {
+        try {
+            result = JSON.parse(JSON.stringify(input));
+        } catch (err) {
+            localDebug(() => `Failed to convert ${input} to JSON: ${err}`);
+        }
+
+        if (result === undefined) {
+            try {
+                result = input.toString();
+            } catch (err) {
+                localDebug(() => `Failed to convert ${input} to string: ${err}`);
+            }
+        }
+    } else if (isArray(input)) {
+        // Array needs to be flatterned
+        const arr: TJsonValue[] = [];
+
+        for (const entry of input) {
+            const inner = convertToJsonValue(entry);
+            if (isArray(inner)) {
+                inner.forEach(innerEntry => arr.push(innerEntry));
+            } else {
+                arr.push(inner);
+            }
+        }
+
+        result = arr;
+    } else if (
+        typeof input === 'string'
+        || typeof input === 'number'
+        || typeof input === 'boolean'
+    ) {
+        result = input;
+    }
+
+    return result;
+}
+
 
 /**
  * Method used to merge 2 IJson object, from `input` into `cummulator`.
