@@ -20,7 +20,8 @@ function testReadLoggerConfig() {
         configDir: undefined,
         level: LogLevel.INFO,
         loggerOverride: {},
-        destinationOverride: {}
+        destinationOverride: {},
+        defaultPayload: undefined
     };
 
     it('convertSeverityToLevel', () => {
@@ -46,7 +47,8 @@ function testReadLoggerConfig() {
                     level: LogLevel.ERROR,
                     filters: ['test-D4qtS09paQ']
                 }
-            }
+            },
+            defaultPayload: undefined
         };
 
         // console.log('### ', config);
@@ -60,7 +62,10 @@ function testReadLoggerConfig() {
             configDir: './etc/simple',
             level: LogLevel.ERROR,
             loggerOverride: {},
-            destinationOverride: {}
+            destinationOverride: {},
+            defaultPayload: {
+                environment: "dev-TaSG6Fpj1R"
+            }
         };
 
         // console.log('### ', config);
@@ -84,7 +89,8 @@ function testReadLoggerConfig() {
                     level: undefined,
                     filters: ['the-logger']
                 }
-            }
+            },
+            defaultPayload: undefined
         };
 
         // console.log('### ', config);

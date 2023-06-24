@@ -246,7 +246,7 @@ describe('logger', () => {
             }
         );
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, undefined, entry.values);
         expect(logData).is.eql({"values": [4540]});
     });
 

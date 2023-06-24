@@ -151,14 +151,14 @@ export abstract class AbstractBaseDestination {
  * A log destination that will write to output synchronously
  */
 export abstract class AbstractLogDestination extends AbstractBaseDestination {
-    abstract write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): void;
+    abstract write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void;
 }
 
 /**
  * A log destination that will write to output asynchronously
  */
 export abstract class AbstractAsyncLogDestination extends AbstractBaseDestination {
-    abstract write(entry: IJLogEntry, loggerLevel: LogLevel | undefined): Promise<void>;
+    abstract write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): Promise<void>;
 }
 
 /**
@@ -246,11 +246,13 @@ export function convertToJsonValue(input: unknown | unknown[]): TJsonValue | TJs
 
 /**
  * Method used to merge 2 IJson object, from `input` into `cummulator`.
+ * 
+ * Note: perform shallow copy
  *
  * @param input source IJson
  * @param cummulator destination IJson
  */
-export function mergeIJson(cummulator: IJson, ...values: IJson[]): void {
+export function mergeIJsonShallow(cummulator: IJson, ...values: IJson[]): void {
     // Merge incoming IJson into data
     for (const entry of values) {
         for (const [key, value] of Object.entries(entry)) {

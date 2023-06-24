@@ -2,7 +2,7 @@ import {
     TJsonValue, IJson, DEFAULT_LOG_LEVEL,
     LogSeverity, LogLevel, convertSeverityToLevel,
     IJLogEntry, AbstractLoggable,
-    mergeIJson
+    mergeIJsonShallow
 } from './core';
 
 import {isEmpty, isObject} from './helper';
@@ -144,7 +144,7 @@ export class JLogger {
                 loggables.push(entry);
             } else if (isObject(entry)) {
                 // Merge incoming IJson into data
-                mergeIJson(data, entry);
+                mergeIJsonShallow(data, entry);
             } else {
                 values.push(entry);
             }

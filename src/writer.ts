@@ -112,9 +112,9 @@ export class LogWriter {
 
                 // Write log
                 if (destination instanceof AbstractAsyncLogDestination) {
-                    promises.push(destination.write(entry, loggerLevel));
+                    promises.push(destination.write(entry, loggerLevel, this.config.defaultPayload));
                 } else if (destination instanceof AbstractLogDestination) {
-                    destination.write(entry, loggerLevel);
+                    destination.write(entry, loggerLevel, this.config.defaultPayload);
                 } else {
                     // If writable
                     // TODO: implement writeLog check based on loggerName and level

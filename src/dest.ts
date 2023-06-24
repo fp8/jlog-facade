@@ -1,6 +1,6 @@
 import {
     AbstractLogDestination, AbstractLoggable, IJLogEntry,
-    IJson, LogLevel, mergeIJson, TJsonValue
+    IJson, LogLevel, mergeIJsonShallow, TJsonValue
 } from "./core";
 import { mergeLoggableModels } from './models';
 import { isEmpty } from "./helper";
@@ -17,12 +17,15 @@ export interface ISimpleJsonOutput extends IJson {
  * the keys in loggables takes priority over those in data; ie, the key in loggable will always overwrite
  * those in data.
  * 
+ * defaultPayload when passed takes precedence on all other entires.
+ * 
  * @param loggables 
  * @param data 
+ * @param defaultPayload 
  * @param values 
  * @returns 
  */
-export function buildOutputDataForDestination(loggables?: AbstractLoggable[], data?: IJson, values?: TJsonValue[]): IJson {
+export function buildOutputDataForDestination(loggables?: AbstractLoggable[], data?: IJson, defaultPayload?: IJson, values?: TJsonValue[]): IJson {
     let output: IJson;
     if (data === undefined) {
         output = {};
@@ -39,10 +42,15 @@ export function buildOutputDataForDestination(loggables?: AbstractLoggable[], da
     // Process loggables
     if (loggables !== undefined) {
         const {loggableJson, loggableValues} = mergeLoggableModels(...loggables);
-        mergeIJson(output, loggableJson);
+        mergeIJsonShallow(output, loggableJson);
         if (!isEmpty(loggableValues)) {
             outputValues.push(...loggableValues);
         }
+    }
+
+    // Process defaultPayload
+    if (defaultPayload !== undefined) {
+        mergeIJsonShallow(output, defaultPayload);
     }
 
     // Add values to the output
@@ -122,8 +130,8 @@ export class SimpleJsonDestination extends AbstractLogDestination {
         super(level);
     }
 
-    protected formatOutput(entry: IJLogEntry): ISimpleJsonOutput {
-        const data = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+    protected formatOutput(entry: IJLogEntry, _loggerLevel?: LogLevel, defaultPayload?: IJson): ISimpleJsonOutput {
+        const data = buildOutputDataForDestination(entry.loggables, entry.data, defaultPayload, entry.values);
 
         let stack: string | undefined = undefined;
         if (this.logStackTrace && entry.error) {
@@ -139,9 +147,9 @@ export class SimpleJsonDestination extends AbstractLogDestination {
         };
     }
 
-    override write(entry: IJLogEntry): void {
+    override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
         console.log(
-            JSON.stringify(this.formatOutput(entry))
+            JSON.stringify(this.formatOutput(entry, loggerLevel, defaultPayload))
         );
     }
 }
@@ -180,7 +188,8 @@ export class SimpleTextDestination extends AbstractLogDestination {
         return useDestination(SimpleTextDestination, level, filters);
     }
 
-    protected formatOutput(entry: IJLogEntry): string {
+    // ToDo: add support for loggerLevel
+    protected formatOutput(entry: IJLogEntry, _loggerLevel?: LogLevel, defaultPayload?: IJson): string {
         const header = `${entry.time.toISOString()}|${entry.severity.toUpperCase().charAt(0)}`;
 
         // Error
@@ -190,7 +199,7 @@ export class SimpleTextDestination extends AbstractLogDestination {
         }
 
         // Create a clone of data
-        const merged = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const merged = buildOutputDataForDestination(entry.loggables, entry.data, defaultPayload, entry.values);
         let data = '';
         if (!isEmpty(merged)) {
             data = ` ${JSON.stringify(merged)}`;
@@ -199,7 +208,7 @@ export class SimpleTextDestination extends AbstractLogDestination {
         return `${header} ${entry.message}${error}${data}`;
     }
 
-    override write(entry: IJLogEntry): void {
-        console.log(this.formatOutput(entry));
+    override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
+        console.log(this.formatOutput(entry, loggerLevel, defaultPayload));
     }
 }
