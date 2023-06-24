@@ -37,6 +37,12 @@ To facilitate generation of JSON output, [JLogger](https://fp8.github.io/jlog-fa
 logger.info('The process has started', {processId: 123456});
 ```
 
+The log methods also support a callback method that would handle any potential error when generating the message.
+
+```ts
+logger.info(() => 'The process has started', {processId: 123456});
+```
+
 #### AbstractLoggable and AbstractKeyValue
 
 Logger methods also accept an [AbstractLoggable](https://fp8.github.io/jlog-facade/classes/AbstractLoggable.html) which exposes `.toJson` method allowing any custom object to be written to the log.  All the entries are merged before the log and by default, duplicated keys are resolved by first key having priority over any subsquent keys.

@@ -1,5 +1,9 @@
 # jlog-facade Release Note
 
+## 0.8.0 [2023-06-24]
+
+* Added support to pass message as callback for all log methods
+
 ## 0.7.0 [2023-03-24]
 
 * Added `Loggable` with support for any data type
