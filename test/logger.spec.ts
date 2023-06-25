@@ -40,6 +40,30 @@ describe('logger', () => {
         clearEntryCollector();
     });
 
+    it('Check config from factory', () => {
+        const config = LoggerFactory.loadedConfig;
+        // from etc/local/logger.json
+        const expected = {
+            "severity": "info",
+            "logger": {
+                "my-logger": "debug"
+            },
+            "destination": {
+                "TextDestination": {
+                    "severity": "warn",
+                    "filters": ["test-zEd7efJ0Pr"]
+                },
+                "JsonDestination": {
+                    "severity": "error",
+                    "filters": "test-D4qtS09paQ"
+                }
+            }
+        };
+
+        // console.log(config);
+        expect(config).to.eql(expected);
+    });
+
     it('no log', () => {
         logger.info('q9MyfvCGwd');
         expect(logCollector).to.eql([]);
@@ -261,7 +285,7 @@ describe('logger', () => {
         expect(entry.error).is.undefined;
         expect(entry.data).is.eql({key_ycUrTEToWP: 'ycUrTEToWP'});
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({key_ycUrTEToWP: 'ycUrTEToWP'});
     });
 
@@ -280,7 +304,7 @@ describe('logger', () => {
         const loggables = getLoggablesFromLogEntry(entry);
         expect(loggables[0].toIJson()).is.eql({"key_k6HraLIn8I": "k6HraLIn8I"});
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({"key_k6HraLIn8I": "k6HraLIn8I"});
     });
 
@@ -302,7 +326,7 @@ describe('logger', () => {
             nestedKey: {key_Tg3YEpbkkD: 'Tg3YEpbkkD'}
         });
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             nestedKey: {key_Tg3YEpbkkD: 'Tg3YEpbkkD'}
         });
@@ -343,7 +367,7 @@ describe('logger', () => {
         });
         expect(loggableValues).is.eql([]);
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             type3: [],
             type2: [ 'dVRZjUn5Il' ],
@@ -388,7 +412,7 @@ describe('logger', () => {
         });
         expect(loggableValues).is.eql([]);
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             key1: 'ha0v4A5ZRy',
             key2: { type2: ['asvKktnPcA'] },
@@ -418,7 +442,7 @@ describe('logger', () => {
         // Ensure that key1 is overwritten by KV and that key2 is present in the final output
         // NB: The key1 is overwritten by KV not because of the sequence but because KV is processed
         // after data in buildOutputDataForDestination
-        const logData = buildOutputDataForDestination(loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             key1: '640W1CcPTF',
             key2: 'LxZFU8NMUq'

@@ -1,6 +1,8 @@
 import { TLogDestination, LogWriter } from './writer';
 import { JLogger } from './logger';
-import { LogLevel } from './core';
+import { IJson, LogLevel } from './core';
+
+
 
 /**
  * ## Json Logger Façada
@@ -71,5 +73,14 @@ export class LoggerFactory {
      */
     public static clearLogDestination(): void {
         this.writer.clearDestinations();
+    }
+
+    /**
+     * Return loaded logger.json
+     *
+     * @returns 
+     */
+    public static get loadedConfig(): IJson {
+        return this.writer.loadedConfig;
     }
 }

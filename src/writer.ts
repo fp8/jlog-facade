@@ -2,7 +2,7 @@ import type {Writable} from 'stream';
 import {isEmpty, delay, localError} from './helper';
 
 import {
-    IJLogEntry, AbstractLogDestination, AbstractAsyncLogDestination, LogLevel, AbstractBaseDestination
+    IJLogEntry, AbstractLogDestination, AbstractAsyncLogDestination, LogLevel, AbstractBaseDestination, IJson
 } from "./core";
 
 import { LoggerConfig, readLoggerConfig, IisWriteNeededParams} from './config';
@@ -145,6 +145,13 @@ export class LogWriter {
                 looking = false;
             }
         }
+    }
+
+    /**
+     * Expose loaded logger.json
+     */
+    public get loadedConfig(): IJson {
+        return this.config.loadedConfig;
     }
 
     /**
