@@ -40,14 +40,49 @@ describe('logger', () => {
         clearEntryCollector();
     });
 
+    it('Check config from factory', () => {
+        const config = LoggerFactory.loadedConfig;
+        // from etc/local/logger.json
+        const expected = {
+            "severity": "info",
+            "logger": {
+                "my-logger": "debug"
+            },
+            "destination": {
+                "TextDestination": {
+                    "severity": "warn",
+                    "filters": ["test-zEd7efJ0Pr"]
+                },
+                "JsonDestination": {
+                    "severity": "error",
+                    "filters": "test-D4qtS09paQ"
+                }
+            }
+        };
+
+        // console.log(config);
+        expect(config).to.eql(expected);
+    });
+
     it('no log', () => {
         logger.info('q9MyfvCGwd');
+        expect(logCollector).to.eql([]);
+    });
+
+    it('no log - cb', () => {
+        logger.info(() => 'q9MyfvCGwd');
         expect(logCollector).to.eql([]);
     });
 
     it('debug log', () => {
         dest.addDestination(new TestDestination(LogLevel.DEBUG));
         logger.debug('FAySD0HVfS');
+        expect(logCollector).to.eql(['SYNC-debug: FAySD0HVfS']);
+    });
+
+    it('debug log - cb', () => {
+        dest.addDestination(new TestDestination(LogLevel.DEBUG));
+        logger.debug(() => 'FAySD0HVfS');
         expect(logCollector).to.eql(['SYNC-debug: FAySD0HVfS']);
     });
 
@@ -58,9 +93,30 @@ describe('logger', () => {
         expect(logCollector).to.eql(['ASYNC-info: lH37czD9jC']);
     });
 
+    it('info async log - cb', async () => {
+        dest.addDestination(new TestAsyncDestination());
+        logger.info(() => 'lH37czD9jC')
+        await logger.logWritten();
+        expect(logCollector).to.eql(['ASYNC-info: lH37czD9jC']);
+    });
+
+    it('info async log - cb with error', async () => {
+        dest.addDestination(new TestAsyncDestination());
+        logger.info(() => {throw new Error('Error type lH37czD9jC');})
+        await logger.logWritten();
+        expect(logCollector).to.eql(['ASYNC-info: log message callback threw error Error type lH37czD9jC']);
+    });
+
     it('warn stream log', async () => {
         dest.addDestination(new TestLogStream());
         logger.warn('kuh3lp3WVj')
+        await logger.logWritten();
+        expect(logCollector).to.eql(['STREAM-warn: kuh3lp3WVj']);
+    });
+
+    it('warn stream log - cb', async () => {
+        dest.addDestination(new TestLogStream());
+        logger.warn(() => 'kuh3lp3WVj')
         await logger.logWritten();
         expect(logCollector).to.eql(['STREAM-warn: kuh3lp3WVj']);
     });
@@ -90,6 +146,31 @@ describe('logger', () => {
         // Note: clear destination is already as it's used in beforeEach 
     });
 
+    it('3 destinations with LoggerFactory - cb', async () => {
+        // Step 1: add 3 destinations
+        LoggerFactory.addLogDestination(new TestDestination(), 'sync');
+        LoggerFactory.addLogDestination(new TestAsyncDestination(), 'async');
+        LoggerFactory.addLogDestination(new TestLogStream(), 'stream');
+        logger.error(() => 'uxqEbnCXeZ');
+
+        await logger.logWritten();
+        expect(logCollector).to.eql([
+            'SYNC-error: uxqEbnCXeZ', 'STREAM-error: uxqEbnCXeZ', 'ASYNC-error: uxqEbnCXeZ'
+        ]);
+
+        // Step 2: remove one destination
+        clearLogCollector();
+
+        LoggerFactory.removeLogDestination('stream');
+        logger.panic(() => '6gaabROqBx');
+        await logger.logWritten();
+        expect(logCollector).to.eql([
+            'SYNC-panic: 6gaabROqBx', 'ASYNC-panic: 6gaabROqBx'
+        ]);
+
+        // Note: clear destination is already as it's used in beforeEach 
+    });
+
     it('Test Error', () => {
         dest.addDestination(new TestDestination());
         const error = new Error('CFYlQXcdGf'); 
@@ -103,10 +184,39 @@ describe('logger', () => {
         expect(entry.error).is.equal(error);
     });
 
+    it('Test Error - cb', () => {
+        dest.addDestination(new TestDestination());
+        const error = new Error('CFYlQXcdGf'); 
+        logger.error(() => error);
+
+        const entry = getFirstEntryFromEntryCollector();
+
+        expect(entry.severity).is.eql('error');
+        expect(entry.level).is.eql(500);
+        expect(entry.message).is.eql('CFYlQXcdGf');
+        expect(entry.error).is.equal(error);
+    });
+
     it('Test Error with Message', () => {
         dest.addDestination(new TestDestination());
         const error = new Error('ldyoMdOhv9'); 
         logger.error('Error message for ldyoMdOhv9', error);
+
+        const entry = getFirstEntryFromEntryCollector();
+
+        expect(entry.severity).is.eql('error');
+        expect(entry.level).is.eql(500);
+        expect(entry.message).is.eql('Error message for ldyoMdOhv9');
+        expect(entry.error).is.equal(error);
+
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        expect(logData).is.eql({});
+    });
+
+    it('Test Error with Message - cb', () => {
+        dest.addDestination(new TestDestination());
+        const error = new Error('ldyoMdOhv9'); 
+        logger.error(() => 'Error message for ldyoMdOhv9', error);
 
         const entry = getFirstEntryFromEntryCollector();
 
@@ -160,7 +270,7 @@ describe('logger', () => {
             }
         );
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, undefined, entry.values);
         expect(logData).is.eql({"values": [4540]});
     });
 
@@ -175,7 +285,7 @@ describe('logger', () => {
         expect(entry.error).is.undefined;
         expect(entry.data).is.eql({key_ycUrTEToWP: 'ycUrTEToWP'});
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({key_ycUrTEToWP: 'ycUrTEToWP'});
     });
 
@@ -194,14 +304,14 @@ describe('logger', () => {
         const loggables = getLoggablesFromLogEntry(entry);
         expect(loggables[0].toIJson()).is.eql({"key_k6HraLIn8I": "k6HraLIn8I"});
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({"key_k6HraLIn8I": "k6HraLIn8I"});
     });
 
     it('Test KV nested', () => {
         dest.addDestination(new TestDestination());
         const kv = new KV('key_Tg3YEpbkkD', 'Tg3YEpbkkD'); 
-        logger.info('nDu4wXyXZq', new KV('nestedKey', kv));
+        logger.info('nDu4wXyXZq', KV.of('nestedKey', kv));
 
         const entry = getFirstEntryFromEntryCollector();
 
@@ -216,7 +326,7 @@ describe('logger', () => {
             nestedKey: {key_Tg3YEpbkkD: 'Tg3YEpbkkD'}
         });
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             nestedKey: {key_Tg3YEpbkkD: 'Tg3YEpbkkD'}
         });
@@ -257,7 +367,7 @@ describe('logger', () => {
         });
         expect(loggableValues).is.eql([]);
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             type3: [],
             type2: [ 'dVRZjUn5Il' ],
@@ -302,7 +412,7 @@ describe('logger', () => {
         });
         expect(loggableValues).is.eql([]);
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             key1: 'ha0v4A5ZRy',
             key2: { type2: ['asvKktnPcA'] },
@@ -332,7 +442,7 @@ describe('logger', () => {
         // Ensure that key1 is overwritten by KV and that key2 is present in the final output
         // NB: The key1 is overwritten by KV not because of the sequence but because KV is processed
         // after data in buildOutputDataForDestination
-        const logData = buildOutputDataForDestination(loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(loggables, entry.data, {}, entry.values);
         expect(logData).is.eql({
             key1: '640W1CcPTF',
             key2: 'LxZFU8NMUq'

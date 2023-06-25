@@ -7,7 +7,7 @@ import {
     convertSeverityToLevel, loadJsonFile
 } from './core';
 
-import {isArray, isObject, localDebug} from './helper';
+import { isArray, isObject, localDebug } from './helper';
 
 
 interface IDestinationOverride {
@@ -15,8 +15,8 @@ interface IDestinationOverride {
     filters?: string[];
 }
 
-type TConfigLoggerOverride = {[loggerName: string]: LogLevel};
-type TConfigDestinationOverride = {[destinationName: string]: IDestinationOverride};
+type TConfigLoggerOverride = { [loggerName: string]: LogLevel };
+type TConfigDestinationOverride = { [destinationName: string]: IDestinationOverride };
 
 export interface IisWriteNeededParams {
     loggerLevel?: LogLevel,
@@ -50,58 +50,27 @@ export interface IisWriteNeededParams {
  * ```
  */
 export class LoggerConfig {
+    #config: IJson;  // Private field
+
     level: LogLevel = DEFAULT_LOG_LEVEL;
     loggerOverride: TConfigLoggerOverride = {};
     destinationOverride: TConfigDestinationOverride = {};
+    defaultPayload: IJson | undefined;
 
     constructor(input?: IJson, public readonly configDir?: string) {
         if (isObject(input)) {
             this.level = this.parseSeverity(input.severity) ?? DEFAULT_LOG_LEVEL;
             this.loggerOverride = this.parseLoggerOverride(input.logger);
             this.destinationOverride = this.parseDestination(input.destination);
+            this.defaultPayload = this.parseDefaultPayload(input.defaultPayload);
+            this.#config = input;
         } else {
             this.level = DEFAULT_LOG_LEVEL;
+            this.#config = {};
         }
         localDebug(`LoggerConfig loaded with configDir ${configDir}`);
         localDebug(`LoggerConfig loaded with loggerOverride ${this.loggerOverride}`);
         localDebug(`LoggerConfig loaded with destinationOverride ${this.destinationOverride}`);
-    }
-
-    /**
-     * Return if log is needed based on the following precedence:
-     * 
-     * 1. Use info from LogConfig if exists, or
-     * 2. Use info from Destination if exists, or
-     * 3. Use info from Logger
-     * 
-     * @param input 
-     */
-    public isWriteNeeded(entry: IJLogEntry, params: IisWriteNeededParams): boolean {
-        localDebug(`LoggerConfig.isWriteNeeded with params: ${JSON.stringify(params)}`);
-        const {level, filters} = this.getLevelAndFilter(entry, params);
-
-        if (level === LogLevel.OFF) {
-            return false;
-        }
-
-        // If write is needed based on logger
-        let writeNeeded = entry.level >= level;
-
-        // If filter exists, only output if loggerName is provided in filters
-        if (writeNeeded && filters.length) {
-            let filterMatch = false;
-            for (const filter of filters) {
-                // console.log(`### isWriteNeeded.match ${entry.name}`, filter);
-                if (entry.name.startsWith(filter)) {
-                    filterMatch = true;
-                    break;
-                }
-            }
-            // console.log('### isWriteNeeded.filterMatch', filterMatch);
-            writeNeeded = filterMatch;
-        }
-
-        return writeNeeded;
     }
 
     /**
@@ -110,7 +79,7 @@ export class LoggerConfig {
      * @param params 
      * @returns 
      */
-    private getLevelAndFilter(entry: IJLogEntry, params: IisWriteNeededParams): {level: LogLevel, filters: string[]} {
+    private getLevelAndFilter(entry: IJLogEntry, params: IisWriteNeededParams): { level: LogLevel, filters: string[] } {
         let level: LogLevel | undefined = undefined;
         let filters: string[] | undefined = undefined;
 
@@ -160,9 +129,8 @@ export class LoggerConfig {
         localDebug(`LoggerConfig.getLevelAndFilter filters ${filters}`);
 
         // result
-        return {level, filters};
+        return { level, filters };
     }
-
 
     /**
      * Parse .severity as a string from config read as IJson
@@ -249,13 +217,19 @@ export class LoggerConfig {
             }
 
             if (destinationFound) {
-                result = {level, filters};
+                result = { level, filters };
             }
         }
 
         return result;
     }
 
+    /**
+     * Return destination if input passed in an object
+     * 
+     * @param input 
+     * @returns 
+     */
     private parseDestination(configDestinationOverride: TJsonValue | TJsonValue[]): TConfigDestinationOverride {
         const destinationOverride: TConfigDestinationOverride = {};
 
@@ -270,7 +244,7 @@ export class LoggerConfig {
                     // Can't afford to have JSON.stringy to fail here
                     try {
                         localDebug(`parseDestination received an invalid entry of ${JSON.stringify(entry)}.  Skipped override of ${destinationName} destination`);
-                    } catch(e) {
+                    } catch (e) {
                         localDebug(`parseDestination received an invalid entry of ${entry}.  Skipped override of ${destinationName} destination`);
                         // do nothing
                     }
@@ -279,6 +253,69 @@ export class LoggerConfig {
         }
 
         return destinationOverride;
+    }
+
+    /**
+     * Return defaultPayload if input passed is an object
+     * 
+     * @param input 
+     * @returns 
+     */
+    private parseDefaultPayload(input: TJsonValue | TJsonValue[]): IJson | undefined {
+        if (input === undefined) {
+            return undefined;
+        } else if (isObject(input)) {
+            return input;
+        } else {
+            localDebug(() => `Default payload passed is not an object: ${input}`);
+            return undefined;
+        }
+    }
+
+    /**
+     * Return if log is needed based on the following precedence:
+     * 
+     * 1. Use info from LogConfig if exists, or
+     * 2. Use info from Destination if exists, or
+     * 3. Use info from Logger
+     * 
+     * @param input 
+     */
+    public isWriteNeeded(entry: IJLogEntry, params: IisWriteNeededParams): boolean {
+        localDebug(`LoggerConfig.isWriteNeeded with params: ${JSON.stringify(params)}`);
+        const { level, filters } = this.getLevelAndFilter(entry, params);
+
+        if (level === LogLevel.OFF) {
+            return false;
+        }
+
+        // If write is needed based on logger
+        let writeNeeded = entry.level >= level;
+
+        // If filter exists, only output if loggerName is provided in filters
+        if (writeNeeded && filters.length) {
+            let filterMatch = false;
+            for (const filter of filters) {
+                // console.log(`### isWriteNeeded.match ${entry.name}`, filter);
+                if (entry.name.startsWith(filter)) {
+                    filterMatch = true;
+                    break;
+                }
+            }
+            // console.log('### isWriteNeeded.filterMatch', filterMatch);
+            writeNeeded = filterMatch;
+        }
+
+        return writeNeeded;
+    }
+
+    /**
+     * Return entire content of configuration file loaded
+     *
+     * @returns 
+     */
+    public get loadedConfig(): IJson {
+        return this.#config;
     }
 }
 

@@ -2,7 +2,7 @@ import {
     TJsonValue, IJson, DEFAULT_LOG_LEVEL,
     LogSeverity, LogLevel, convertSeverityToLevel,
     IJLogEntry, AbstractLoggable,
-    mergeIJson
+    mergeIJsonShallow
 } from './core';
 
 import {isEmpty, isObject} from './helper';
@@ -10,6 +10,19 @@ import {LogWriter} from './writer';
 import {LoggableError} from './models';
 
 
+/**
+ * Actual types that can be used as a logger message
+ */
+export type TLoggerMessageTypeBase = string | Error;
+
+/**
+ * Types that can be passed to logger as a message
+ */
+export type TLoggerMessageType = TLoggerMessageTypeBase | (() => TLoggerMessageTypeBase);
+
+/**
+ * Object type supported by Logger
+ */
 export type TLoggableParam = AbstractLoggable | IJson;
 
 /**
@@ -28,12 +41,13 @@ export class JLogger {
     constructor(private name: string, public readonly logLevel?: LogLevel) {}
 
     /**
-     * Isolate the first error from the params and return a clean LoggableParams
+     * Isolate the first error from the params and return a clean LoggableParams.  This is needed
+     * as Error object could be part of loggable entry array.
      * 
-     * @param input 
+     * @param rest 
      * @returns 
      */
-    private extractError(message: string | Error, input: TLoggableEntry[]): [Error | undefined, TLoggableParam[]] {
+    private extractError(message: string | Error, rest: TLoggableEntry[]): [Error | undefined, TLoggableParam[]] {
         let errorIsSet = false;
         const result: TLoggableParam[] = [];
 
@@ -46,7 +60,7 @@ export class JLogger {
         }
 
         // Parse input
-        for (const entry of input) {
+        for (const entry of rest) {
             if (entry instanceof Error) {
                 if (errorIsSet) {
                     // tranform error into IJSON
@@ -61,6 +75,53 @@ export class JLogger {
         }
 
         return [error, result];
+    }
+
+    /**
+     * Breakdown input params of logger into message, error and params
+     * 
+     * @param message 
+     * @param rest 
+     * @returns 
+     */
+    private handleLoggerInputParams(message: TLoggerMessageType, rest: TLoggableEntry[]): [
+        string,
+        Error | undefined,
+        TLoggableParam[]
+     ] {
+        // Handle message as callback
+        let actualMessage: TLoggerMessageTypeBase;
+        if (typeof message === 'function') {
+            try {
+                actualMessage = message();
+            } catch (ex) {
+                if (ex instanceof Error) {
+                    actualMessage = `log message callback threw error ${ex.message}`;
+                } else {
+                    actualMessage = `log message callback threw error ${ex}`;
+                }
+            }
+            
+        } else {
+            actualMessage = message;
+        }
+
+        // Extract data to log from params
+        const [errorToUse, parmsToUse] = this.extractError(actualMessage, rest);
+
+        // Set the message and error to be set in the log entry
+        let messageToUse: string;
+        if (actualMessage instanceof Error) {
+            messageToUse = actualMessage.message;
+        } else {
+            messageToUse = actualMessage;
+        }
+
+        return [
+            messageToUse,
+            errorToUse,
+            parmsToUse
+        ]
     }
 
     /**
@@ -83,7 +144,7 @@ export class JLogger {
                 loggables.push(entry);
             } else if (isObject(entry)) {
                 // Merge incoming IJson into data
-                mergeIJson(data, entry);
+                mergeIJsonShallow(data, entry);
             } else {
                 values.push(entry);
             }
@@ -101,7 +162,7 @@ export class JLogger {
      * @param message string or instance of Error
      * @param rest 
      */
-    protected log(severity: string | LogSeverity, message: string | Error, ...rest: TLoggableEntry[]): void {
+    protected log(severity: string | LogSeverity, message: TLoggerMessageType, ...rest: TLoggableEntry[]): void {
         const writer = LogWriter.getInstance();
 
         // skip any logging if no destination has been set
@@ -111,28 +172,20 @@ export class JLogger {
 
         const level = convertSeverityToLevel(severity) ?? DEFAULT_LOG_LEVEL;
 
-        // Extract data to log from params
-        const [error, params] = this.extractError(message, rest);
-
-        // Set the message and error to be set in the log entry
-        let messageToUse: string;
-        if (message instanceof Error) {
-            messageToUse = message.message;
-        } else {
-            messageToUse = message;
-        }
+        // Handle message as callback
+        const [messageToUse, errorToUse, parmsToUse] = this.handleLoggerInputParams(message, rest)
 
         const entry: IJLogEntry = {
             name: this.name,
             severity,
             level,
             message: messageToUse,
-            error,
+            error: errorToUse,
             time: new Date()
         };
 
         // Add loggables and data
-        const {loggables, data, values} = this.extractData(params);
+        const {loggables, data, values} = this.extractData(parmsToUse);
         
         if (!isEmpty(loggables)) {
             entry.loggables = loggables;
@@ -148,27 +201,27 @@ export class JLogger {
     }
 
     /** Write a {@link LogSeverity.DEBUG} severity log */
-    public debug(message: string | Error, ...rest: TLoggableEntry[]): void {
+    public debug(message: TLoggerMessageType, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.DEBUG, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.INFO} severity log */
-    public info(message: string | Error, ...rest: TLoggableEntry[]): void {
+    public info(message: TLoggerMessageType, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.INFO, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.WARNING} severity log */
-    public warn(message: string | Error, ...rest: TLoggableEntry[]): void {
+    public warn(message: TLoggerMessageType, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.WARNING, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.ERROR} severity log */
-    public error(message: string | Error, ...rest: TLoggableEntry[]): void {
+    public error(message: TLoggerMessageType, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.ERROR, message, ...rest);
     }
 
     /** Write a {@link LogSeverity.PANIC} severity log */
-    public panic(message: string | Error, ...rest: TLoggableEntry[]): void {
+    public panic(message: TLoggerMessageType, ...rest: TLoggableEntry[]): void {
         this.log(LogSeverity.PANIC, message, ...rest);
     }
 

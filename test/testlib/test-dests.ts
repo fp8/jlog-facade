@@ -3,7 +3,7 @@ import { Writable } from 'stream';
 import {
     IJLogEntry, ISimpleJsonOutput, LogLevel,
     AbstractLogDestination, AbstractAsyncLogDestination,
-    SimpleTextDestination, SimpleJsonDestination
+    SimpleTextDestination, SimpleJsonDestination, IJson
 } from "@fp8proj";
 
 import {useDestination} from "@fp8proj/dest";
@@ -89,8 +89,8 @@ export class TestSimpleJsonDestination extends SimpleJsonDestination {
     static use(level?: string | LogLevel, ...filters: string[]): TestSimpleJsonDestination {
         return useDestination(TestSimpleJsonDestination, level, filters);
     }
-    override write(entry: IJLogEntry): void {
-        const result = this.formatOutput(entry);
+    override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
+        const result = this.formatOutput(entry, loggerLevel, defaultPayload);
         console.log(JSON.stringify(result));
 
         // Delete the timestamp from collected log as it can't be tested

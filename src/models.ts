@@ -2,7 +2,7 @@ import {
     TJsonValue, IJson,
     AbstractLoggable, TLoggableValue,
     convertToJsonValue,
-    convertLoggableValueToIJson, mergeIJson
+    convertLoggableValueToIJson, mergeIJsonShallow
 } from "./core";
 
 import {isArray, isObject} from './helper';
@@ -114,7 +114,7 @@ export function mergeLoggableModels<T extends TLoggableValue>(...loggables: Abst
     const loggableJson: IJson = {};
 
     const kvJson = mergeKV(false, kvs);
-    mergeIJson(loggableJson, ...json, kvJson);
+    mergeIJsonShallow(loggableJson, ...json, kvJson);
 
     return {loggableJson, loggableValues};
 }

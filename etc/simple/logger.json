@@ -1,3 +1,6 @@
 {
-    "severity": "error"
+    "severity": "error",
+    "defaultPayload": {
+        "environment": "dev-TaSG6Fpj1R"
+    }
 }
