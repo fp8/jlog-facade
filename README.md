@@ -155,6 +155,8 @@ The level can also be set by upon logger creation but this is not recommended as
 const logger = LoggerFactory.create('my-logger', LogLevel.ERROR);
 ```
 
+The content of the loaded `logger.json` can be accessed via [LoggerFactory.loadedConfig](https://fp8.github.io/jlog-facade/classes/LoggerFactory.html#loadedConfig) property.
+
 ## Why Another Facade?
 
 Working with project in both Kotlin and Typescript, I have come to miss the abstraction allowed by [slf4j](https://www.slf4j.org/) in the JVM world.  Another challenge I face is the need to produce a JSON based output for cloud service provider.

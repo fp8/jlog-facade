@@ -11,9 +11,9 @@ import {LoggableError} from './models';
 
 
 /**
- * Actual type that can be used as a logger message
+ * Actual types that can be used as a logger message
  */
-type TLoggerMessageTypeBase = string | Error;
+export type TLoggerMessageTypeBase = string | Error;
 
 /**
  * Types that can be passed to logger as a message

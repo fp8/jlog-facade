@@ -3,6 +3,10 @@
 ## 0.8.0 [2023-06-24]
 
 * Added support to pass message as callback for all log methods
+* Added support for a `defaultPayload` in `logger.json` where content are added to logger write
+* Added `LoggerFactory.loadedConfig` with content of `logger.json`
+* [BREAKING] `buildOutputDataForDestination` now accept `defaultPayload` as 3rd param, pushing `values`
+  to 4th position.
 
 ## 0.7.0 [2023-03-24]
 
