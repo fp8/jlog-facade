@@ -123,8 +123,8 @@ export abstract class AbstractLoggable {
 }
 
 export abstract class AbstractBaseDestination {
-    // abstract DESTINATION_NAME: string;
     protected _logNameFilter: string[] | undefined;
+    protected _logInterceptor: ((entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson) => void) | undefined = undefined;
 
     constructor(public readonly level?: LogLevel) {}
 
@@ -142,8 +142,42 @@ export abstract class AbstractBaseDestination {
         return this._logNameFilter;
     }
 
-    public clearLoggerNameFilter(): void {
+    public clearLoggerNameFilter(): AbstractBaseDestination {
         this._logNameFilter = undefined;
+        return this;
+    }
+
+    /**
+     * Set log interceptor to capture the log written
+     *
+     * @param callback 
+     */
+    public setLogInterceptor(callback: (entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson) => void): AbstractBaseDestination {
+        this._logInterceptor = callback;
+        return this;
+    }
+
+    /**
+     * Clear the log interceptor
+     */
+    public clearLogInterceptor(): AbstractBaseDestination {
+        this._logInterceptor = undefined;
+        return this;
+    }
+
+    /**
+     * This method must be called by the subclass to write the log entry.  It cannot be automated as the
+     * basic design of the log destination is to allow the subclass' `.write` method to return different
+     * type of value depending on the implementation.
+     *
+     * @param entry 
+     * @param loggerLevel 
+     * @param defaultPayload 
+     */
+    protected _write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
+        if (this._logInterceptor) {
+            this._logInterceptor(entry, loggerLevel, defaultPayload);
+        }
     }
 }
 

@@ -41,6 +41,9 @@ describe('logger', () => {
     });
 
     it('Check config from factory', () => {
+        // This must be added here or it will use config loaded from other Writer
+        // not sure why the line below doesn't work if placed right after declaration of dest
+        dest._reloadConfig();
         const config = LoggerFactory.loadedConfig;
         // from etc/local/logger.json
         const expected = {
@@ -71,6 +74,12 @@ describe('logger', () => {
 
     it('no log - cb', () => {
         logger.info(() => 'q9MyfvCGwd');
+        expect(logCollector).to.eql([]);
+    });
+
+    it('logger off', () => {
+        dest.addDestination(new TestDestination(LogLevel.OFF));
+        logger.debug('L4kFNn8yLq');
         expect(logCollector).to.eql([]);
     });
 

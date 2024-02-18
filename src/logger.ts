@@ -166,7 +166,7 @@ export class JLogger {
         const writer = LogWriter.getInstance();
 
         // skip any logging if no destination has been set
-        if (!writer.hasDestination) {
+        if (!writer.hasDestinations) {
             return;
         }
 
