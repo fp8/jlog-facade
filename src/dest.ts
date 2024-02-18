@@ -148,6 +148,7 @@ export class SimpleJsonDestination extends AbstractLogDestination {
     }
 
     override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
+        this._write(entry, loggerLevel, defaultPayload);
         console.log(
             JSON.stringify(this.formatOutput(entry, loggerLevel, defaultPayload))
         );
@@ -209,6 +210,7 @@ export class SimpleTextDestination extends AbstractLogDestination {
     }
 
     override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
+        this._write(entry, loggerLevel, defaultPayload);
         console.log(this.formatOutput(entry, loggerLevel, defaultPayload));
     }
 }

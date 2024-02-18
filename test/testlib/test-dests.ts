@@ -19,6 +19,18 @@ export function clearEntryCollector(): void {
     entryCollector = []
 }
 
+/**
+ * Capture only log entry ignoring the log level and default payload
+ *
+ * @param entry 
+ * @param loggerLevel 
+ * @param defaultPayload 
+ */
+export function logEntryInterceptor(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson) : void {
+    logCollector.push(entry.message);
+    entryCollector.push(entry);
+}
+
 export function addToLogAndEntryCollector(source: string, entry: IJLogEntry) {
     let message = `${source}-${entry.severity}`;
 

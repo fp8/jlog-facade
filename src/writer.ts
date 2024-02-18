@@ -77,7 +77,7 @@ export class LogWriter {
     /**
      * Check if destination has been set
      */
-    public get hasDestination(): boolean {
+    public get hasDestinations(): boolean {
         return !isEmpty(this.destinations);
     }
 

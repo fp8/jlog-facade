@@ -1,5 +1,11 @@
 # jlog-facade Release Note
 
+## 0.9.0 [2024-02-18]
+
+* Added support for log interceptor with `AbstractBaseDestination.setLogInterceptor` and `AbstractBaseDestination.clearLogInterceptor`
+* Log destination now must call `AbstractBaseDestination._write` in order for log interceptor to work
+* [BREAKING] Renamed `LogWriter.hasDestination` to `LogWriter.hasDestinations`
+
 ## 0.8.0 [2023-06-24]
 
 * Added support to pass message as callback for all log methods

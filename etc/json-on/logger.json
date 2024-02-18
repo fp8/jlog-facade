@@ -1,0 +1,7 @@
+{
+    "destination": {
+        "SimpleJsonDestination": {
+            "severity": "warn"
+        }
+    }
+}

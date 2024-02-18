@@ -112,7 +112,7 @@ LoggerFactory.addLogDestination(new SimpleJsonDestination());
 * [jlog-facade](https://fp8.github.io/jlog-facade/)
 
 
-#### Configuration
+### Configuration
 
 A `logger.json` can be placed under `./etc/${FP8_ENV}/logger.json` or `./config/${FP8_ENV}/logger.json` with the following content:
 
@@ -156,6 +156,28 @@ const logger = LoggerFactory.create('my-logger', LogLevel.ERROR);
 ```
 
 The content of the loaded `logger.json` can be accessed via [LoggerFactory.loadedConfig](https://fp8.github.io/jlog-facade/classes/LoggerFactory.html#loadedConfig) property.
+
+#### Local vs deployed logger
+
+It's often difficult to read json when doing local development.  The `logger.json` configuration allows you to enable multiple logger and activate a specific
+logger for given env.  To accomplish this, set multiple destination as desired but set those destination using `LogLevel.OFF`:
+
+```typescript
+SimpleTextDestination.use(LogLevel.OFF);
+SimpleJsonDestination.use(LogLevel.OFF);
+```
+
+Add the following `logger.json` to activate only the `SimpleTextDestination`:
+
+```json
+{
+    "destination": {
+        "SimpleTextDestination": {
+            "severity": "info"
+        }
+    }
+}
+```
 
 ## Why Another Facade?
 

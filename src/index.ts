@@ -2,7 +2,7 @@ export {
     TJsonValue, TLoggableValue, IJson, IJLogEntry,
     LogSeverity, LogLevel,
     AbstractLoggable,
-    AbstractLogDestination, AbstractAsyncLogDestination
+    AbstractBaseDestination, AbstractLogDestination, AbstractAsyncLogDestination
 } from './core';
 
 export {

@@ -1,0 +1,7 @@
+{
+    "destination": {
+        "SimpleTextDestination": {
+            "severity": "info"
+        }
+    }
+}
