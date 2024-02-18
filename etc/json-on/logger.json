@@ -1,5 +1,4 @@
 {
-    "severity": "info",
     "destination": {
         "SimpleJsonDestination": {
             "severity": "warn"

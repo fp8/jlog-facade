@@ -1,5 +1,4 @@
 {
-    "severity": "info",
     "destination": {
         "SimpleTextDestination": {
             "severity": "info"
