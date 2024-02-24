@@ -78,12 +78,12 @@ The value of the `date` key in above example would be `2023-03-24T00:00:00.000Z`
 
 ### Log Destination
 
-2 simple destination is available in this package:
+2 simple destinations are available in this package:
 
 1. [SimpleJsonDestination](https://fp8.github.io/jlog-facade/classes/SimpleJsonDestination.html)
 1. [SimpleTextDestination](https://fp8.github.io/jlog-facade/classes/SimpleTextDestination.html)
 
-The class above serve mostly for debug or test purposes.  It is expected that a separate platform specific destination is used in an actual project.  A log destination really is just a formatter for a [IJLogEntry](https://fp8.github.io/jlog-facade/interfaces/IJLogEntry.html) and [LoggerFactory](https://fp8.github.io/jlog-facade/classes/LoggerFactory.html) accepts 3 type of log destination:
+The class above serve mostly for debug or test purposes.  It is expected that a separate platform specific destination is used in an actual project.  A log destination really is just a formatter for a [IJLogEntry](https://fp8.github.io/jlog-facade/interfaces/IJLogEntry.html) and [LoggerFactory](https://fp8.github.io/jlog-facade/classes/LoggerFactory.html).  It accepts 3 type of log destination:
 
 1. A synchronous class that extends [AbstractLogDestination](https://fp8.github.io/jlog-facade/classes/AbstractLogDestination.html)
 1. An asynchronous class that extends [AbstractAsyncLogDestination](https://fp8.github.io/jlog-facade/classes/AbstractAsyncLogDestination.html)
