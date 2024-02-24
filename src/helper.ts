@@ -1,6 +1,11 @@
 // STAND-ALONE PACKAGE -- Must not import anything from this project
 
 /**
+ * The string that will replace the circular reference in the JSON.stringify
+ */
+export const CIRCULAR_STRUCTURE_ERROR = `[ERROR:circular-structure]`;
+
+/**
  * A simple delay function 
  */
 export async function delay(milliseconds: number): Promise<void> {
@@ -119,5 +124,37 @@ export function localDebug(input: string | (() => string), name?: string): void 
         if (message) {
             console.debug(`[D] ${message}`);
         }
+    }
+}
+
+/**
+ * A function to be used by JSON.stringify to replace circular references to null
+ * 
+ * ref: https://stackoverflow.com/a/69881039/2355087
+ */
+export function circularReferenceReplacer(): (key: string, value: unknown) => unknown {
+    const visited = new WeakSet();
+    return (key: string, value: unknown) => {
+      if (typeof value === "object" && value !== null) {
+        if (visited.has(value)) {
+          return CIRCULAR_STRUCTURE_ERROR;
+        }
+        visited.add(value);
+      }
+      return value;
+    };
+}
+
+
+/**
+ * A replacement for JSON.stringify that attempts to call JSON.stringify and if it fails,
+ * it will attempt to remove circular references
+ */
+export function safeStringify(input: unknown): string {
+    try {
+        return JSON.stringify(input);
+    } catch (error) {
+        localDebug(() => `safeStringify: JSON.stringify error: ${error} will attempt to remove circular structure and replace with it with "${CIRCULAR_STRUCTURE_ERROR}" string`);
+        return JSON.stringify(input, circularReferenceReplacer());
     }
 }

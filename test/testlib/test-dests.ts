@@ -3,7 +3,8 @@ import { Writable } from 'stream';
 import {
     IJLogEntry, ISimpleJsonOutput, LogLevel,
     AbstractLogDestination, AbstractAsyncLogDestination,
-    SimpleTextDestination, SimpleJsonDestination, IJson
+    SimpleTextDestination, SimpleJsonDestination, IJson,
+    safeStringify
 } from "@fp8proj";
 
 import {useDestination} from "@fp8proj/dest";
@@ -49,7 +50,7 @@ export class TestDestination extends AbstractLogDestination {
 
     override write(entry: IJLogEntry): void {
         addToLogAndEntryCollector('SYNC', entry);
-        console.log('TestDestination: ', JSON.stringify(entry));
+        console.log('TestDestination: ', safeStringify(entry));
     }
 }
 
@@ -62,7 +63,7 @@ export class TestAsyncDestination extends AbstractAsyncLogDestination {
         return new Promise((resolve, _) => {
             setTimeout(() => {
                 addToLogAndEntryCollector('ASYNC', entry);
-                console.log('TestAsyncDestination: ', JSON.stringify(entry));
+                console.log('TestAsyncDestination: ', safeStringify(entry));
                 resolve();
             }, 200);
         });
@@ -75,7 +76,7 @@ export class TestLogStream extends Writable {
     }
     override _write(chunk: IJLogEntry, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
         addToLogAndEntryCollector('STREAM', chunk);
-        console.log('TestLogStream: ', JSON.stringify(chunk));
+        console.log('TestLogStream: ', safeStringify(chunk));
     }
 }
 
@@ -103,11 +104,11 @@ export class TestSimpleJsonDestination extends SimpleJsonDestination {
     }
     override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
         const result = this.formatOutput(entry, loggerLevel, defaultPayload);
-        console.log(JSON.stringify(result));
+        console.log(safeStringify(result));
 
         // Delete the timestamp from collected log as it can't be tested
         const collect: Omit<ISimpleJsonOutput, 't'> = result;
         delete collect.t;
-        logCollector.push(JSON.stringify(collect));
+        logCollector.push(safeStringify(collect));
     }
 }

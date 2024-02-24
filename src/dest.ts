@@ -3,7 +3,7 @@ import {
     IJson, LogLevel, mergeIJsonShallow, TJsonValue
 } from "./core";
 import { mergeLoggableModels } from './models';
-import { isEmpty } from "./helper";
+import { isEmpty, safeStringify } from "./helper";
 import { LoggerFactory } from "./factory";
 
 export interface ISimpleJsonOutput extends IJson {
@@ -150,7 +150,7 @@ export class SimpleJsonDestination extends AbstractLogDestination {
     override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
         this._write(entry, loggerLevel, defaultPayload);
         console.log(
-            JSON.stringify(this.formatOutput(entry, loggerLevel, defaultPayload))
+            safeStringify(this.formatOutput(entry, loggerLevel, defaultPayload))
         );
     }
 }
@@ -203,7 +203,7 @@ export class SimpleTextDestination extends AbstractLogDestination {
         const merged = buildOutputDataForDestination(entry.loggables, entry.data, defaultPayload, entry.values);
         let data = '';
         if (!isEmpty(merged)) {
-            data = ` ${JSON.stringify(merged)}`;
+            data = ` ${safeStringify(merged)}`;
         }
 
         return `${header} ${entry.message}${error}${data}`;
