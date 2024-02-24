@@ -107,6 +107,27 @@ SimpleJsonDestination.use();
 LoggerFactory.addLogDestination(new SimpleJsonDestination());
 ```
 
+#### Log Interceptor
+
+Log destination allow you to add a log interceptor by calling `setLogInterceptor`:
+
+```js
+SimpleTextDestination.use(LogLevel.DEBUG).setLogInterceptor((entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson) => {
+  // Do something with log entry
+});
+```
+
+This is often used by unit testing to ensure that correct data are logged.
+
+#### Creating Your Own Log Destination
+
+You should be able to create your own version of Log Destination [AbstractLogDestination](https://fp8.github.io/jlog-facade/classes/AbstractLogDestination.html).  However, you must make sure that:
+
+1. Do create a `public static use` method so that all Log Destination follow the same interface
+1. You must call `._write(entry, loggerLevel, defaultPayload)` in your `.write` method to ensure that log interceptor works
+1. Use [safeStringify](https://fp8.github.io/jlog-facade/functions/safeStringify.html) instead of `JSON.stringify` to address
+   error that would result from logging an object with circular reference.
+
 ## Documentation
 
 * [jlog-facade](https://fp8.github.io/jlog-facade/)
