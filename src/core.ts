@@ -1,6 +1,6 @@
 // ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
 import * as fs from 'fs';
-import {isArray, localError, localDebug, isObject} from './helper';
+import {isArray, localError, localDebug, isObject, safeStringify} from './helper';
 
 
 
@@ -120,6 +120,10 @@ export interface IJLogEntry {
  */
 export abstract class AbstractLoggable {
     abstract toIJson(): IJson
+
+    public toJSON(): IJson {
+        return this.toIJson();
+    }
 }
 
 export abstract class AbstractBaseDestination {
@@ -240,7 +244,7 @@ export function convertToJsonValue(input: unknown | unknown[]): TJsonValue | TJs
         result = convertLoggableValueToJsonValue(input);
     } else if (isObject(input)) {
         try {
-            result = JSON.parse(JSON.stringify(input));
+            result = JSON.parse(safeStringify(input));
         } catch (err) {
             localDebug(() => `Failed to convert ${input} to JSON: ${err}`);
         }

@@ -1,5 +1,10 @@
 # jlog-facade Release Note
 
+## 0.9.1 [2024-02-24]
+
+* Created `helper.safeStringify` to address circular structure error from `JSON.strigify`
+* Updated `SimpleJsonDestination`, `SimpleTextDestination` and `Loggable` to use `safeStringify`
+
 ## 0.9.0 [2024-02-18]
 
 * Added support for log interceptor with `AbstractBaseDestination.setLogInterceptor` and `AbstractBaseDestination.clearLogInterceptor`

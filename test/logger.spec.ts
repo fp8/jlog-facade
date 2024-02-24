@@ -2,14 +2,17 @@ import {
     expect,
     logCollector, entryCollector,
     clearLogCollector, clearEntryCollector,
+    CustomError,
     TestDestination, TestAsyncDestination, TestLogStream
 } from './testlib';
 
 import {
     IJLogEntry, LoggerFactory,
-    KV, Tags, mergeLoggableModels, buildOutputDataForDestination, AbstractLoggable, LogLevel
+    KV, Tags, mergeLoggableModels, buildOutputDataForDestination, AbstractLoggable, LogLevel, IJson
 } from '@fp8proj';
 import {LogWriter} from '@fp8proj/writer';
+
+
 
 /**
  * Ensure that entry collector has collected one entry
@@ -234,8 +237,32 @@ describe('logger', () => {
         expect(entry.message).is.eql('Error message for ldyoMdOhv9');
         expect(entry.error).is.equal(error);
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, undefined, entry.values);
         expect(logData).is.eql({});
+    });
+
+    it('Test Error with multiple entries', () => {
+        dest.addDestination(new TestDestination());
+        const error = new Error('ee8EImX6BH');
+        const custom = new CustomError('p4e52JDLvY')
+        logger.error(() => 'Error message for ee8EImX6BH', error, custom);
+
+        const entry = getFirstEntryFromEntryCollector();
+        
+        expect(entry.severity).is.eql('error');
+        expect(entry.level).is.eql(500);
+        expect(entry.message).is.eql('Error message for ee8EImX6BH');
+        expect(entry.error).is.equal(error);
+        expect(entry.loggables).to.have.length(1);
+
+        const loggableError = entry.loggables![0].toIJson();
+
+        expect(loggableError.CustomError).not.to.be.undefined;
+        const customError = loggableError.CustomError! as IJson;
+
+        expect(customError.name).is.eql('Error');
+        expect(customError.message).is.eql('p4e52JDLvY');
+        expect(customError.stack).to.satisfies((s: string) => s.startsWith('Error: p4e52JDLvY'));
     });
 
     it('Test invalid string as Error', () => {
@@ -247,7 +274,7 @@ describe('logger', () => {
         expect(entry.message).is.eql('This is not an error');
         expect(entry.error).is.undefined;
 
-        const logData = buildOutputDataForDestination(entry.loggables, entry.data, entry.values);
+        const logData = buildOutputDataForDestination(entry.loggables, entry.data, undefined, entry.values);
         expect(logData).is.eql({});
 
         // Test the second log

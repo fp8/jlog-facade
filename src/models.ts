@@ -303,18 +303,22 @@ export class Label extends AbstractKeyValue<string> {
 
 /**
  * Create a version of Error that can be converted to ILoggable
+ * 
+ * N.B.: The name of the error comes from the error.constructor.name as that is the name of the custome error class.
+ *       If custom error doesn't set the .name to .constructor.name, the error.name would always be `Error`
  */
 export class LoggableError extends AbstractLoggable {
-    constructor(private error: Error) {
+    constructor(protected error: Error) {
         super();
     }
 
     toIJson(): IJson {
         const content: IJson = {};
         const result: IJson = {};
-        result[this.error.name] = content;
 
-        content.type = 'Error';
+        const name = this.error.constructor.name;
+        result[name] = content;
+
         content.name = this.error.name;
         content.message = this.error.message;
         content.stack = this.error.stack;

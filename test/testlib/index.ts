@@ -13,3 +13,4 @@ export const {expect} = chai;
 export {sinon, chai};
 
 export * from './test-dests';
+export * from './test-classes';
