@@ -10,7 +10,8 @@ export {
     isNullOrUndefined, isEmpty,
     isArray, isObject,
     localDebug,
-    safeStringify
+    safeStringify,
+    maskSecret
 } from './helper';
 
 export * from './models';
