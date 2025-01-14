@@ -2,7 +2,8 @@
 
 ## 0.9.2 [next]
 
-* Exposed name property in JLogger 
+* Exposed name property in JLogger
+* Created `helper.maskSecret` to mask string secret 
 
 ## 0.9.1 [2024-02-24]
 
