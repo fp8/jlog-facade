@@ -1,5 +1,9 @@
 # jlog-facade Release Note
 
+## 0.9.2 [next]
+
+* Exposed name property in JLogger 
+
 ## 0.9.1 [2024-02-24]
 
 * Created `helper.safeStringify` to address circular structure error from `JSON.strigify`

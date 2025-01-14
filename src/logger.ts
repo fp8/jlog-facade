@@ -38,7 +38,7 @@ export type TLoggableEntry = Error | TLoggableParam;
  * Json Logger objact.  Do not use this class directly; always create an instance of JLogger using {@link LoggerFactory}
  */
 export class JLogger {
-    constructor(private name: string, public readonly logLevel?: LogLevel) {}
+    constructor(public readonly name: string, public readonly logLevel?: LogLevel) {}
 
     /**
      * Isolate the first error from the params and return a clean LoggableParams.  This is needed

@@ -484,4 +484,14 @@ describe('logger', () => {
             key2: 'LxZFU8NMUq'
         });
     });
+
+    it('Test public properties', () => {
+        const loggerName = 'test-logger';
+        const logLevel = LogLevel.DEBUG;
+        const logger = LoggerFactory.create(loggerName, logLevel);
+
+
+        expect(logger.name).is.eql(loggerName);
+        expect(logger.logLevel).is.eql(logLevel);
+    })
 });
