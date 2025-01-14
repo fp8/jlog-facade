@@ -1,7 +1,7 @@
 // ROOT LEVEL PACKAGE -- Allowed to import only from STAND-ALONE packages from this project
 import * as fs from 'fs';
 import {isArray, localError, localDebug, isObject, safeStringify} from './helper';
-
+import { createHash } from 'crypto';
 
 
 /**
@@ -317,3 +317,42 @@ export function loadJsonFile(filepath: string): IJson | undefined {
 
     return loaded;
 }
+
+/**
+ * Masks a secret string or buffer by either hashing it or partially revealing it.
+ * 
+ * This function ensures that sensitive information is not fully exposed in logs or other outputs.
+ * If the secret is too short (less or equal than 12 characters) or if forced, it will be hashed and a portion of the hash will be used.
+ * Otherwise, it will reveal the first and last few characters of the secret, masking the middle part.
+ * 
+ * @param secret - The secret string or buffer to be masked.
+ * @param forceHash - Optional flag to force hashing of the secret regardless of its length. Defaults to false.
+ * @returns A masked version of the secret, either partially revealed or hashed.
+ */
+export function maskSecret(secret: string | Buffer, forceHash = false): string {
+    const leading = 4;
+    const trailing = 4;
+    // Minimum length of secret before being hashed
+    const minSecretLength = leading + trailing + 4;
+  
+    // Make sure that secret to be logged is always a string
+    let secretToUse: string;
+  
+    // If length of secret is less or equal to 12, use a hashed version of the secret
+    if (secret.length <= minSecretLength || forceHash) {
+      const hash = createHash('sha256').update(secret).digest();
+  
+      let buf = Buffer.alloc(15);
+      hash.copy(buf, 0, 0, 15);
+      secretToUse = buf.toString('base64');
+    } else {
+      if (secret instanceof Buffer) {
+        secretToUse = secret.toString('base64');
+      } else {
+        secretToUse = secret;
+      }
+    }
+  
+    // Create output
+    return `${secretToUse.slice(0, leading)}...${secretToUse.slice(-trailing)}`;
+  }
