@@ -1,13 +1,11 @@
 import {expect} from './testlib';
-import { createHash } from 'crypto';
 import {
     LogLevel,
     convertToJsonValue,
     convertSeverityToLevel,
     convertLoggableValueToIJson,
-    maskSecret
 } from '@fp8proj/core';
-
+import { maskSecret } from '@fp8proj/helper';
 import {KV} from '@fp8proj/models';
 
 describe('core', () => {
