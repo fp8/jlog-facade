@@ -22,3 +22,4 @@ export { JLogger, TLoggableParam, TLoggableEntry, TLoggerMessageType, TLoggerMes
 export { TLogDestination } from './writer';
 
 export { convertToJsonValue } from './core';
+export { maskSecret } from './core';
