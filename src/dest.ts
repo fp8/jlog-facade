@@ -1,3 +1,4 @@
+import * as os from 'node:os';
 import {
     AbstractLogDestination, AbstractLoggable, IJLogEntry,
     IJson, LogLevel, mergeIJsonShallow, TJsonValue
@@ -149,7 +150,7 @@ export class SimpleJsonDestination extends AbstractLogDestination {
 
     override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
         this._write(entry, loggerLevel, defaultPayload);
-        console.log(
+        printLine(
             safeStringify(this.formatOutput(entry, loggerLevel, defaultPayload))
         );
     }
@@ -211,6 +212,19 @@ export class SimpleTextDestination extends AbstractLogDestination {
 
     override write(entry: IJLogEntry, loggerLevel?: LogLevel, defaultPayload?: IJson): void {
         this._write(entry, loggerLevel, defaultPayload);
-        console.log(this.formatOutput(entry, loggerLevel, defaultPayload));
+        printLine(this.formatOutput(entry, loggerLevel, defaultPayload));
+    }
+}
+
+/**
+ * Write to stdout if input is not empty with a OS specific new line at the end.
+ * 
+ * N.B.: This function doesn't work in browser environment.
+ * 
+ * @param input 
+ */
+function printLine(input: string): void {
+    if (input) {
+        process.stdout.write(input + os.EOL);
     }
 }
