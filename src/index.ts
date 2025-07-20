@@ -21,3 +21,5 @@ export * from './factory';
 // Allow user to create a customized instance of JLogger
 export { JLogger, TLoggableParam, TLoggableEntry, TLoggerMessageType, TLoggerMessageTypeBase } from './logger';
 export { TLogDestination } from './writer';
+
+export { convertToJsonValue } from './core';
