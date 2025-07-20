@@ -1,9 +1,12 @@
 # jlog-facade Release Note
 
-## 0.9.2 [next]
+## 0.10.0 [2025-07-20]
 
-* Exposed name property in JLogger
-* Created `helper.maskSecret` to mask string secret 
+* Replaced console.log with process.stdout.write in `dest.ts` (#33)
+* Created `helper.maskSecret` to mask string secret (#28)
+* Exposed JLogger's name property (#27)
+* Add typeguard for isNotEmpty and add support for empty buffer (#26)
+* Exposed convertToJsonValue at library level (#25)
 
 ## 0.9.1 [2024-02-24]
 

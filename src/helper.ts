@@ -63,12 +63,24 @@ export function isEmpty(input: unknown): boolean {
     } else if (input instanceof Date) {
         // Date is an object but has not properties
         return false;
+    } else if (input instanceof Buffer) {
+        return input.length === 0;
     } else if (isObject(input)) {
         for (const i in input) return false;
         return true;
     } else {
         return false;
     }
+}
+
+/**
+ * Check if an input is not empty with Type Guard
+ *
+ * @param input 
+ * @returns 
+ */
+export function isNotEmpty<T>(input: unknown): input is T {
+    return !isEmpty(input);
 }
 
 /**
@@ -183,7 +195,7 @@ export function maskSecret(secret: string | Buffer, forceHash = false): string {
     if (secret.length <= minSecretLength || forceHash) {
       const hash = createHash('sha256').update(secret).digest();
   
-      let buf = Buffer.alloc(15);
+      const buf = Buffer.alloc(15);
       hash.copy(buf, 0, 0, 15);
       secretToUse = buf.toString('base64');
     } else {
