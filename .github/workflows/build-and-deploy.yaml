@@ -26,7 +26,7 @@ jobs:
         shell: bash
 
       - name: Upload Docs as Artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages
           path: build/docs/
@@ -51,4 +51,4 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/deploy-pages@v1
+      - uses: actions/deploy-pages@v4
