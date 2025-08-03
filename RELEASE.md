@@ -1,5 +1,9 @@
 # jlog-facade Release Note
 
+## 0.10.1 [2025-08-03]
+
+* Exported the printLine so other `dest` lib can use it
+
 ## 0.10.0 [2025-07-20]
 
 * Replaced console.log with process.stdout.write in `dest.ts` (#33)

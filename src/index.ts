@@ -1,25 +1,41 @@
 export {
-    TJsonValue, TLoggableValue, IJson, IJLogEntry,
-    LogSeverity, LogLevel,
-    AbstractLoggable,
-    AbstractBaseDestination, AbstractLogDestination, AbstractAsyncLogDestination
-} from './core';
+  TJsonValue,
+  TLoggableValue,
+  IJson,
+  IJLogEntry,
+  LogSeverity,
+  LogLevel,
+  AbstractLoggable,
+  AbstractBaseDestination,
+  AbstractLogDestination,
+  AbstractAsyncLogDestination,
+} from "./core";
 
 export {
-    delay,
-    isNullOrUndefined, isEmpty,
-    isArray, isObject,
-    localDebug,
-    safeStringify,
-    maskSecret
-} from './helper';
+  delay,
+  isNullOrUndefined,
+  isEmpty,
+  isNotEmpty,
+  isArray,
+  isObject,
+  localDebug,
+  printLine,
+  safeStringify,
+  maskSecret,
+} from "./helper";
 
-export * from './models';
-export * from './dest';
-export * from './factory';
+export * from "./models";
+export * from "./dest";
+export * from "./factory";
 
 // Allow user to create a customized instance of JLogger
-export { JLogger, TLoggableParam, TLoggableEntry, TLoggerMessageType, TLoggerMessageTypeBase } from './logger';
-export { TLogDestination } from './writer';
+export {
+  JLogger,
+  TLoggableParam,
+  TLoggableEntry,
+  TLoggerMessageType,
+  TLoggerMessageTypeBase,
+} from "./logger";
+export { TLogDestination } from "./writer";
 
-export { convertToJsonValue } from './core';
+export { convertToJsonValue } from "./core";
